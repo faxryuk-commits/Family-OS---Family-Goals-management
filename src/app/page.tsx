@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { FamilyBoard } from "@/components/FamilyBoard";
-import { getFamily, getUserFamily, createFamily, joinFamily } from "@/lib/actions/family";
+import { getUserFamily } from "@/lib/actions/family";
 import { redirect } from "next/navigation";
 import { NoFamilyView } from "@/components/NoFamilyView";
 

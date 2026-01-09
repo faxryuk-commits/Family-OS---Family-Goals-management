@@ -1,7 +1,7 @@
 "use client";
 
 import { Goal, User } from "@prisma/client";
-import { RESOURCES, HORIZONS, STATUSES, ResourceType } from "@/lib/types";
+import { RESOURCES, HORIZONS, STATUSES, ResourceType, HorizonType, StatusType } from "@/lib/types";
 
 type GoalCardProps = {
   goal: Goal & { owner: User };
@@ -18,8 +18,8 @@ export function GoalCard({
   onClick 
 }: GoalCardProps) {
   const resources = JSON.parse(goal.resources || "[]") as ResourceType[];
-  const horizon = HORIZONS[goal.horizon];
-  const status = STATUSES[goal.status];
+  const horizon = HORIZONS[goal.horizon as HorizonType] || HORIZONS.MID;
+  const status = STATUSES[goal.status as StatusType] || STATUSES.DRAFT;
 
   return (
     <div 

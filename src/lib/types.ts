@@ -8,6 +8,10 @@ export const RESOURCES = {
 } as const;
 
 export type ResourceType = keyof typeof RESOURCES;
+export type HorizonType = keyof typeof HORIZONS;
+export type StatusType = keyof typeof STATUSES;
+export type ConflictTypeType = keyof typeof CONFLICT_TYPES;
+export type StrategyType = keyof typeof STRATEGIES;
 
 // Goal horizon labels
 export const HORIZONS = {
