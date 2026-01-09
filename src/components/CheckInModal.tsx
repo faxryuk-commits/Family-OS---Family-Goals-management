@@ -1,11 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { User, Goal, Subtask } from "@prisma/client";
+import { Goal, Subtask } from "@prisma/client";
 import { getCurrentWeek } from "@/lib/utils";
 
+type UserBasic = {
+  id: string;
+  name: string | null;
+};
+
 type GoalWithSubtasks = Goal & {
-  owner: User;
+  owner: UserBasic;
   subtasks: Subtask[];
 };
 
@@ -19,9 +24,9 @@ type CheckInModalProps = {
     completedSubtaskIds: string[];
     goalComments: { goalId: string; comment: string }[];
   }) => void;
-  currentUser: User;
+  currentUser: UserBasic;
   hasCheckedIn: boolean;
-  userGoals: GoalWithSubtasks[]; // Цели текущего пользователя
+  userGoals: GoalWithSubtasks[];
 };
 
 // Форматируем номер недели в читаемый вид

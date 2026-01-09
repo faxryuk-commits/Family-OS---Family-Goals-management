@@ -1,10 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Goal, User } from "@prisma/client";
+import { Goal, Subtask } from "@prisma/client";
 import { ResourceType } from "@/lib/types";
 
-type GoalWithOwner = Goal & { owner: User };
+type UserBasic = {
+  id: string;
+  name: string | null;
+};
+
+type GoalWithOwner = Goal & { 
+  owner: UserBasic;
+  subtasks: Subtask[];
+};
 
 type EditGoalModalProps = {
   isOpen: boolean;
@@ -18,6 +26,8 @@ type EditGoalModalProps = {
     deadline?: string;
     metric?: string;
     resources: ResourceType[];
+    status: string;
+    subtasks?: { id?: string; title: string; completed?: boolean }[];
   }) => void;
   onDelete: () => void;
 };
@@ -60,6 +70,7 @@ export function EditGoalModal({
   );
   const [metric, setMetric] = useState(goal.metric || "");
   const [resources, setResources] = useState<ResourceType[]>(parsedResources);
+  const [status, setStatus] = useState(goal.status);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   if (!isOpen) return null;
@@ -76,6 +87,7 @@ export function EditGoalModal({
       deadline: deadline || undefined,
       metric: metric || undefined,
       resources,
+      status,
     });
     onClose();
   };

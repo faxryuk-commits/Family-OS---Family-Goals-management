@@ -1,9 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { User } from "@prisma/client";
 import { ResourceType } from "@/lib/types";
 import { HelpIcon } from "./Tooltip";
+
+type UserBasic = {
+  id: string;
+  name: string | null;
+};
 
 type CreateGoalModalProps = {
   isOpen: boolean;
@@ -19,7 +23,7 @@ type CreateGoalModalProps = {
     ownerId: string;
     subtasks?: string[];
   }) => void;
-  members: { user: User }[];
+  members: { user: UserBasic }[];
   currentUserId: string;
 };
 

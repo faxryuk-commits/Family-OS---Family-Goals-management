@@ -1,11 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Family, FamilyMember, User, Invite } from "@prisma/client";
+import { Family, FamilyMember, Invite } from "@prisma/client";
 import { createInvite, updateNorthStar } from "@/lib/actions/family";
 
+type UserBasic = {
+  id: string;
+  email: string;
+  name: string | null;
+  image: string | null;
+  level: number;
+};
+
 type FamilyWithMembers = Family & {
-  members: (FamilyMember & { user: User })[];
+  members: (FamilyMember & { user: UserBasic })[];
 };
 
 type FamilySettingsProps = {

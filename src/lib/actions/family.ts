@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
-// Получить семью пользователя
+// Получить семью пользователя (с геймификацией)
 export async function getUserFamily(userId: string) {
   const membership = await db.familyMember.findFirst({
     where: { userId },
@@ -11,7 +11,25 @@ export async function getUserFamily(userId: string) {
       family: {
         include: {
           members: {
-            include: { user: true },
+            include: { 
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  name: true,
+                  image: true,
+                  createdAt: true,
+                  updatedAt: true,
+                  // Gamification fields
+                  level: true,
+                  xp: true,
+                  streak: true,
+                  longestStreak: true,
+                  goalsCompleted: true,
+                  subtasksCompleted: true,
+                },
+              },
+            },
           },
           goals: {
             include: { 
