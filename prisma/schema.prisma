@@ -41,6 +41,7 @@ model Family {
   conflicts  Conflict[]
   agreements Agreement[]
   checkIns   CheckIn[]
+  invites    Invite[]
 }
 
 model FamilyMember {
@@ -169,4 +170,20 @@ model CheckIn {
   family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
 
   @@unique([userId, familyId, week])
+}
+
+// ============================================
+// INVITES
+// ============================================
+
+model Invite {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  familyId  String
+  family    Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdBy String
+  expiresAt DateTime
+  usedAt    DateTime?
+  usedBy    String?
+  createdAt DateTime @default(now())
 }

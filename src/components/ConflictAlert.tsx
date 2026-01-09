@@ -1,7 +1,7 @@
 "use client";
 
 import { Conflict, Goal, User } from "@prisma/client";
-import { CONFLICT_TYPES, RESOURCES, ResourceType } from "@/lib/types";
+import { RESOURCES, ResourceType } from "@/lib/types";
 
 type ConflictAlertProps = {
   conflict: Conflict & {
@@ -11,64 +11,86 @@ type ConflictAlertProps = {
   onResolve: () => void;
 };
 
+// Понятные названия ресурсов
+const resourceLabels: Record<ResourceType, string> = {
+  MONEY: "деньги",
+  TIME: "время",
+  GEO: "место жительства",
+  ENERGY: "силы и энергию",
+  RISK: "готовность рисковать",
+};
+
 export function ConflictAlert({ conflict, onResolve }: ConflictAlertProps) {
-  const conflictType = CONFLICT_TYPES[conflict.type];
   const sharedResources = JSON.parse(conflict.sharedResources || "[]") as ResourceType[];
+  
+  // Генерируем понятное объяснение
+  const resourcesText = sharedResources.length > 0
+    ? sharedResources.map(r => resourceLabels[r]).join(" и ")
+    : "одни и те же ресурсы";
 
   return (
-    <div className="card border-red-500/50 animate-fade-in animate-pulse-glow">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className={`w-3 h-3 rounded-full ${conflictType.color}`} />
-        <div>
-          <h3 className="font-semibold text-red-400">{conflictType.label}</h3>
-          <p className="text-sm text-[var(--muted)]">{conflictType.description}</p>
+    <div className="card border-red-500/50 animate-fade-in">
+      {/* Header with explanation */}
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xl">⚠️</span>
+          <h3 className="font-semibold text-red-400">
+            Эти цели конфликтуют
+          </h3>
         </div>
+        <p className="text-sm text-[var(--muted)]">
+          Обе цели требуют <span className="text-amber-400">{resourcesText}</span>. 
+          Нужно решить, как совместить или выбрать приоритет.
+        </p>
       </div>
 
       {/* Goals in conflict */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div className="space-y-3 mb-4">
         {/* Goal A */}
-        <div className="p-4 bg-[var(--background)] rounded-lg border border-[var(--card-border)]">
+        <div className="p-4 bg-[var(--background)] rounded-lg border border-[var(--card-border)] relative">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-xs font-bold">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-sm font-bold">
               {conflict.goalA.owner.name.charAt(0)}
             </div>
-            <span className="text-sm text-[var(--muted)]">
-              {conflict.goalA.owner.name}
-            </span>
+            <div>
+              <span className="font-medium">{conflict.goalA.owner.name}</span>
+              <span className="text-[var(--muted)] text-sm ml-2">хочет:</span>
+            </div>
           </div>
-          <h4 className="font-medium">{conflict.goalA.title}</h4>
+          <p className="text-lg font-medium">{conflict.goalA.title}</p>
         </div>
 
-        {/* VS */}
-        <div className="hidden md:flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <span className="text-2xl">⚡</span>
+        {/* VS indicator */}
+        <div className="flex items-center justify-center">
+          <div className="flex items-center gap-2 px-3 py-1 bg-red-500/10 rounded-full">
+            <span className="text-red-400 text-sm">конфликтует с</span>
+          </div>
         </div>
 
         {/* Goal B */}
         <div className="p-4 bg-[var(--background)] rounded-lg border border-[var(--card-border)]">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-xs font-bold">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-sm font-bold">
               {conflict.goalB.owner.name.charAt(0)}
             </div>
-            <span className="text-sm text-[var(--muted)]">
-              {conflict.goalB.owner.name}
-            </span>
+            <div>
+              <span className="font-medium">{conflict.goalB.owner.name}</span>
+              <span className="text-[var(--muted)] text-sm ml-2">хочет:</span>
+            </div>
           </div>
-          <h4 className="font-medium">{conflict.goalB.title}</h4>
+          <p className="text-lg font-medium">{conflict.goalB.title}</p>
         </div>
       </div>
 
       {/* Shared Resources */}
       {sharedResources.length > 0 && (
-        <div className="mb-4">
-          <p className="text-sm text-[var(--muted)] mb-2">Пересекающиеся ресурсы:</p>
+        <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+          <p className="text-sm text-amber-400 mb-2">🔄 Обе цели требуют:</p>
           <div className="flex flex-wrap gap-2">
             {sharedResources.map((resource) => (
               <span 
                 key={resource}
-                className={`badge bg-red-500/20 text-red-400`}
+                className="badge bg-amber-500/20 text-amber-300"
               >
                 {RESOURCES[resource]?.icon} {RESOURCES[resource]?.label}
               </span>
@@ -77,12 +99,18 @@ export function ConflictAlert({ conflict, onResolve }: ConflictAlertProps) {
         </div>
       )}
 
+      {/* Explainer */}
+      <div className="mb-4 p-3 bg-[var(--background)] rounded-lg text-sm text-[var(--muted)]">
+        💡 Это нормально! В семье часто возникают такие ситуации. 
+        Важно обсудить и найти решение вместе.
+      </div>
+
       {/* Action */}
       <button
         onClick={onResolve}
-        className="btn btn-danger w-full"
+        className="btn btn-primary w-full"
       >
-        🔧 Решить конфликт
+        🤝 Решить вместе
       </button>
     </div>
   );

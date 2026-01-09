@@ -63,6 +63,42 @@ export async function updateGoalProgress(goalId: string, progress: number) {
   return goal;
 }
 
+export type UpdateGoalInput = {
+  title?: string;
+  description?: string;
+  type?: string;
+  horizon?: string;
+  deadline?: Date | null;
+  metric?: string;
+  resources?: string[];
+  status?: string;
+};
+
+export async function updateGoal(goalId: string, input: UpdateGoalInput) {
+  const goal = await db.goal.update({
+    where: { id: goalId },
+    data: {
+      ...(input.title && { title: input.title }),
+      ...(input.description !== undefined && { description: input.description }),
+      ...(input.type && { type: input.type }),
+      ...(input.horizon && { horizon: input.horizon }),
+      ...(input.deadline !== undefined && { deadline: input.deadline }),
+      ...(input.metric !== undefined && { metric: input.metric }),
+      ...(input.resources && { resources: JSON.stringify(input.resources) }),
+      ...(input.status && { status: input.status }),
+    },
+    include: { owner: true },
+  });
+
+  // Если изменились ресурсы, перепроверяем конфликты
+  if (input.resources) {
+    await detectConflicts(goalId, goal.familyId);
+  }
+
+  revalidatePath("/");
+  return goal;
+}
+
 export async function deleteGoal(goalId: string) {
   await db.goal.delete({
     where: { id: goalId },

@@ -3,46 +3,58 @@
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
-// Для MVP: создаём демо-семью и пользователей
-export async function createDemoFamily() {
-  // Проверяем, есть ли уже демо-семья
-  const existingFamily = await db.family.findFirst({
-    where: { name: "Демо Семья" },
-  });
-
-  if (existingFamily) {
-    return existingFamily;
-  }
-
-  // Создаём демо-пользователей
-  const husband = await db.user.upsert({
-    where: { email: "husband@demo.com" },
-    update: {},
-    create: {
-      email: "husband@demo.com",
-      name: "Фахриддин",
+// Получить семью пользователя
+export async function getUserFamily(userId: string) {
+  const membership = await db.familyMember.findFirst({
+    where: { userId },
+    include: {
+      family: {
+        include: {
+          members: {
+            include: { user: true },
+          },
+          goals: {
+            include: { owner: true },
+            orderBy: { createdAt: "desc" },
+          },
+          conflicts: {
+            where: { status: "UNRESOLVED" },
+            include: {
+              goalA: { include: { owner: true } },
+              goalB: { include: { owner: true } },
+            },
+          },
+          checkIns: {
+            include: { user: true },
+            orderBy: { createdAt: "desc" },
+            take: 20,
+          },
+          agreements: {
+            orderBy: { createdAt: "desc" },
+          },
+        },
+      },
     },
   });
 
-  const wife = await db.user.upsert({
-    where: { email: "wife@demo.com" },
-    update: {},
-    create: {
-      email: "wife@demo.com",
-      name: "Мадина",
-    },
-  });
+  return membership?.family || null;
+}
 
-  // Создаём семью
+// Создать новую семью
+export async function createFamily(data: {
+  name: string;
+  northStar?: string;
+  creatorId: string;
+}) {
   const family = await db.family.create({
     data: {
-      name: "Демо Семья",
-      northStar: "Стабильная жизнь + рост + свобода выбора",
+      name: data.name,
+      northStar: data.northStar,
       members: {
-        create: [
-          { userId: husband.id, role: "ADULT" },
-          { userId: wife.id, role: "PARTNER" },
-        ],
+        create: {
+          userId: data.creatorId,
+          role: "ADULT",
+        },
       },
     },
     include: {
@@ -52,8 +64,110 @@ export async function createDemoFamily() {
     },
   });
 
+  revalidatePath("/");
   return family;
 }
+
+// Генерация кода приглашения
+function generateInviteCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+// Создать приглашение в семью
+export async function createInvite(familyId: string, createdBy: string) {
+  // Проверяем, что пользователь в этой семье
+  const membership = await db.familyMember.findFirst({
+    where: { familyId, userId: createdBy },
+  });
+
+  if (!membership) {
+    throw new Error("Вы не являетесь членом этой семьи");
+  }
+
+  // Создаём приглашение (действует 7 дней)
+  const invite = await db.invite.create({
+    data: {
+      code: generateInviteCode(),
+      familyId,
+      createdBy,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    },
+  });
+
+  return invite;
+}
+
+// Присоединиться к семье по коду
+export async function joinFamilyByInvite(code: string, userId: string) {
+  // Находим приглашение
+  const invite = await db.invite.findUnique({
+    where: { code: code.toUpperCase() },
+    include: { family: true },
+  });
+
+  if (!invite) {
+    return null;
+  }
+
+  // Проверяем срок действия
+  if (invite.expiresAt < new Date()) {
+    return null;
+  }
+
+  // Проверяем, не использовано ли уже
+  if (invite.usedAt) {
+    return null;
+  }
+
+  // Проверяем, не состоит ли уже в семье
+  const existingMembership = await db.familyMember.findFirst({
+    where: { familyId: invite.familyId, userId },
+  });
+
+  if (existingMembership) {
+    return invite.family;
+  }
+
+  // Добавляем в семью и помечаем приглашение использованным
+  await db.$transaction([
+    db.familyMember.create({
+      data: {
+        familyId: invite.familyId,
+        userId,
+        role: "PARTNER",
+      },
+    }),
+    db.invite.update({
+      where: { id: invite.id },
+      data: {
+        usedAt: new Date(),
+        usedBy: userId,
+      },
+    }),
+  ]);
+
+  revalidatePath("/");
+  return invite.family;
+}
+
+// Получить все приглашения семьи
+export async function getFamilyInvites(familyId: string) {
+  return db.invite.findMany({
+    where: { 
+      familyId,
+      usedAt: null,
+      expiresAt: { gt: new Date() },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+// Старые функции для совместимости
 
 export async function getFamily() {
   const family = await db.family.findFirst({
@@ -72,6 +186,14 @@ export async function getFamily() {
           goalB: { include: { owner: true } },
         },
       },
+      checkIns: {
+        include: { user: true },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      },
+      agreements: {
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
 
@@ -85,5 +207,54 @@ export async function updateNorthStar(familyId: string, northStar: string) {
   });
 
   revalidatePath("/");
+  return family;
+}
+
+// Для демо (если нужно)
+export async function createDemoFamily() {
+  const existingFamily = await db.family.findFirst({
+    where: { name: "Демо Семья" },
+  });
+
+  if (existingFamily) {
+    return existingFamily;
+  }
+
+  const husband = await db.user.upsert({
+    where: { email: "husband@demo.com" },
+    update: {},
+    create: {
+      email: "husband@demo.com",
+      name: "Фахриддин",
+    },
+  });
+
+  const wife = await db.user.upsert({
+    where: { email: "wife@demo.com" },
+    update: {},
+    create: {
+      email: "wife@demo.com",
+      name: "Мадина",
+    },
+  });
+
+  const family = await db.family.create({
+    data: {
+      name: "Демо Семья",
+      northStar: "Стабильная жизнь + рост + свобода выбора",
+      members: {
+        create: [
+          { userId: husband.id, role: "ADULT" },
+          { userId: wife.id, role: "PARTNER" },
+        ],
+      },
+    },
+    include: {
+      members: {
+        include: { user: true },
+      },
+    },
+  });
+
   return family;
 }
