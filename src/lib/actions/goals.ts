@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { detectConflicts } from "./conflicts";
 import { auth } from "@/auth";
+import { recordGoalCompletion, addUserXp, checkAchievements } from "./gamification";
 
 // Проверка что пользователь — владелец цели
 async function verifyGoalOwner(goalId: string): Promise<boolean> {
@@ -63,6 +64,10 @@ export async function createGoal(input: CreateGoalInput) {
   // Проверяем конфликты с другими целями
   await detectConflicts(goal.id, input.familyId);
 
+  // 🎮 GAMIFICATION: XP за создание цели
+  await addUserXp(input.ownerId, 10, "Новая цель создана");
+  await checkAchievements(input.ownerId);
+
   revalidatePath("/");
   return goal;
 }
@@ -84,13 +89,24 @@ export async function updateGoalProgress(goalId: string, progress: number) {
     throw new Error("Вы можете обновлять прогресс только своих целей");
   }
 
+  // Получаем текущий статус цели
+  const oldGoal = await db.goal.findUnique({ where: { id: goalId } });
+  const wasCompleted = oldGoal?.status === "COMPLETED";
+  const nowCompleted = progress >= 100;
+
   const goal = await db.goal.update({
     where: { id: goalId },
     data: { 
       progress: Math.min(100, Math.max(0, progress)),
-      status: progress >= 100 ? "COMPLETED" : undefined,
+      status: nowCompleted ? "COMPLETED" : oldGoal?.status,
     },
   });
+
+  // 🎮 GAMIFICATION: Награда за выполнение цели
+  if (nowCompleted && !wasCompleted && goal.ownerId) {
+    await recordGoalCompletion(goal.ownerId);
+    await checkAchievements(goal.ownerId);
+  }
 
   revalidatePath("/");
   return goal;

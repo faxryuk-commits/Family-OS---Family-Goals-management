@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentWeek } from "@/lib/utils";
 import { recalculateGoalProgress } from "./subtasks";
 import { auth } from "@/auth";
+import { updateStreak, addUserXp, recordSubtaskCompletion, checkAchievements } from "./gamification";
 
 export { getCurrentWeek };
 
@@ -106,6 +107,23 @@ export async function createCheckIn(input: CreateCheckInInput) {
       });
     }
   }
+
+  // 🎮 GAMIFICATION: Награды за check-in
+  if (!existing) {
+    // Новый check-in — обновляем стрик и даём XP
+    await updateStreak(input.userId);
+    await addUserXp(input.userId, 15, "Еженедельный check-in");
+  }
+
+  // XP за каждую выполненную подзадачу
+  if (input.completedSubtaskIds && input.completedSubtaskIds.length > 0) {
+    for (let i = 0; i < input.completedSubtaskIds.length; i++) {
+      await recordSubtaskCompletion(input.userId);
+    }
+  }
+
+  // Проверяем новые ачивки
+  await checkAchievements(input.userId);
 
   revalidatePath("/");
   return checkIn;

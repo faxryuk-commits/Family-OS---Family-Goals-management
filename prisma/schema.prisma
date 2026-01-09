@@ -59,8 +59,18 @@ model User {
   emailVerified DateTime?
   name          String?
   image         String?
+  bio           String?   // О себе
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  // Gamification
+  level          Int      @default(1)
+  xp             Int      @default(0)
+  streak         Int      @default(0)      // Текущий стрик check-in
+  longestStreak  Int      @default(0)      // Максимальный стрик
+  lastCheckIn    DateTime?                  // Последний check-in для стрика
+  goalsCompleted Int      @default(0)      // Всего выполнено целей
+  subtasksCompleted Int   @default(0)      // Всего выполнено подзадач
 
   // NextAuth Relations
   accounts Account[]
@@ -70,6 +80,35 @@ model User {
   familyMemberships FamilyMember[]
   goals             Goal[]
   checkIns          CheckIn[]
+  achievements      UserAchievement[]
+}
+
+// ============================================
+// GAMIFICATION
+// ============================================
+
+model Achievement {
+  id          String   @id @default(cuid())
+  code        String   @unique  // first_goal, week_streak_4, etc.
+  title       String
+  description String
+  icon        String   // Emoji
+  xpReward    Int      @default(10)
+  category    String   // GOALS, STREAKS, FAMILY, SPECIAL
+
+  users UserAchievement[]
+}
+
+model UserAchievement {
+  id           String   @id @default(cuid())
+  unlockedAt   DateTime @default(now())
+  
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement  Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
 }
 
 model Family {
@@ -78,6 +117,12 @@ model Family {
   northStar String?  // Главная цель семьи
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Gamification
+  level           Int @default(1)
+  xp              Int @default(0)
+  goalsCompleted  Int @default(0)
+  weeklyStreak    Int @default(0)   // Недель подряд все отмечаются
 
   // Relations
   members    FamilyMember[]

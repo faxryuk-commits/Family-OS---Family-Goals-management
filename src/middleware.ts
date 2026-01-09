@@ -8,6 +8,10 @@ export default auth((req) => {
   // Публичные пути - не требуют авторизации
   const publicPaths = ["/login", "/join", "/api/auth"];
   const isPublicPath = publicPaths.some(path => pathname.startsWith(path));
+  
+  // Защищённые пути с авторизацией (не требуют семью)
+  const authOnlyPaths = ["/profile"];
+  const isAuthOnlyPath = authOnlyPaths.some(path => pathname.startsWith(path));
 
   // Разрешаем публичные пути
   if (isPublicPath) {
