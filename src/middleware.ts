@@ -3,27 +3,31 @@ import { NextResponse } from "next/server";
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
-  const isLoginPage = req.nextUrl.pathname === "/login";
-  const isApiRoute = req.nextUrl.pathname.startsWith("/api");
+  const { pathname } = req.nextUrl;
 
-  // Разрешаем API routes
-  if (isApiRoute) {
+  // Публичные пути - не требуют авторизации
+  const publicPaths = ["/login", "/api/auth"];
+  const isPublicPath = publicPaths.some(path => pathname.startsWith(path));
+
+  // Разрешаем публичные пути
+  if (isPublicPath) {
+    // Если авторизован и на странице логина - редирект на главную
+    if (isLoggedIn && pathname === "/login") {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
     return NextResponse.next();
   }
 
-  // Если не авторизован и не на странице логина - редирект на логин
-  if (!isLoggedIn && !isLoginPage) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  // Если авторизован и на странице логина - редирект на главную
-  if (isLoggedIn && isLoginPage) {
-    return NextResponse.redirect(new URL("/", req.url));
+  // Если не авторизован - редирект на логин
+  if (!isLoggedIn) {
+    const loginUrl = new URL("/login", req.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 };
