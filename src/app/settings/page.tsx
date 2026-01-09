@@ -4,6 +4,9 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { FamilySettings } from "@/components/FamilySettings";
 
+// Динамическая страница - не пререндерится при билде
+export const dynamic = "force-dynamic";
+
 export default async function SettingsPage() {
   const session = await auth();
   

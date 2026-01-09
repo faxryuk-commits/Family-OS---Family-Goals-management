@@ -3,6 +3,9 @@ import { getAgreements, getAgreementStats } from "@/lib/actions/agreements";
 import { AgreementsList } from "@/components/AgreementsList";
 import Link from "next/link";
 
+// Динамическая страница - не пререндерится при билде
+export const dynamic = "force-dynamic";
+
 export default async function AgreementsPage() {
   const family = await getFamily();
 

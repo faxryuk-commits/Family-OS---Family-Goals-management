@@ -4,6 +4,9 @@ import { getUserFamily } from "@/lib/actions/family";
 import { redirect } from "next/navigation";
 import { NoFamilyView } from "@/components/NoFamilyView";
 
+// Динамическая страница - не пререндерится при билде
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const session = await auth();
   
