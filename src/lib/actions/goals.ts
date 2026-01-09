@@ -3,6 +3,20 @@
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { detectConflicts } from "./conflicts";
+import { auth } from "@/auth";
+
+// Проверка что пользователь — владелец цели
+async function verifyGoalOwner(goalId: string): Promise<boolean> {
+  const session = await auth();
+  if (!session?.user?.id) return false;
+
+  const goal = await db.goal.findUnique({
+    where: { id: goalId },
+    select: { ownerId: true },
+  });
+
+  return goal?.ownerId === session.user.id;
+}
 
 export type CreateGoalInput = {
   title: string;
@@ -64,6 +78,12 @@ export async function updateGoalStatus(goalId: string, status: string) {
 }
 
 export async function updateGoalProgress(goalId: string, progress: number) {
+  // Проверяем права
+  const isOwner = await verifyGoalOwner(goalId);
+  if (!isOwner) {
+    throw new Error("Вы можете обновлять прогресс только своих целей");
+  }
+
   const goal = await db.goal.update({
     where: { id: goalId },
     data: { 
@@ -88,6 +108,12 @@ export type UpdateGoalInput = {
 };
 
 export async function updateGoal(goalId: string, input: UpdateGoalInput) {
+  // Проверяем права
+  const isOwner = await verifyGoalOwner(goalId);
+  if (!isOwner) {
+    throw new Error("Вы можете редактировать только свои цели");
+  }
+
   const goal = await db.goal.update({
     where: { id: goalId },
     data: {
@@ -113,6 +139,12 @@ export async function updateGoal(goalId: string, input: UpdateGoalInput) {
 }
 
 export async function deleteGoal(goalId: string) {
+  // Проверяем права
+  const isOwner = await verifyGoalOwner(goalId);
+  if (!isOwner) {
+    throw new Error("Вы можете удалять только свои цели");
+  }
+
   await db.goal.delete({
     where: { id: goalId },
   });

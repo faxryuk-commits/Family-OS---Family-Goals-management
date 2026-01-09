@@ -269,6 +269,7 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
                       handleProgressChange(goal.id, progress)
                     }
                     onClick={() => setSelectedGoal(goal)}
+                    isOwner={goal.ownerId === currentUserId}
                   />
                 ))}
               </div>
@@ -307,6 +308,7 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
                       handleProgressChange(goal.id, progress)
                     }
                     onClick={() => setSelectedGoal(goal)}
+                    isOwner={goal.ownerId === currentUserId}
                   />
                 ))}
               </div>

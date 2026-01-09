@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { getCurrentWeek } from "@/lib/utils";
 import { recalculateGoalProgress } from "./subtasks";
+import { auth } from "@/auth";
 
 export { getCurrentWeek };
 
@@ -18,6 +19,12 @@ export type CreateCheckInInput = {
 };
 
 export async function createCheckIn(input: CreateCheckInInput) {
+  // Проверяем что пользователь создаёт check-in только за себя
+  const session = await auth();
+  if (!session?.user?.id || session.user.id !== input.userId) {
+    throw new Error("Вы можете отмечаться только за себя");
+  }
+
   const week = getCurrentWeek();
 
   // Проверяем, есть ли уже check-in за эту неделю

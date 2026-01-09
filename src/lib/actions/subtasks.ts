@@ -2,9 +2,41 @@
 
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/auth";
+
+// Проверка что пользователь — владелец цели
+async function verifyGoalOwner(goalId: string): Promise<boolean> {
+  const session = await auth();
+  if (!session?.user?.id) return false;
+
+  const goal = await db.goal.findUnique({
+    where: { id: goalId },
+    select: { ownerId: true },
+  });
+
+  return goal?.ownerId === session.user.id;
+}
+
+// Проверка владельца подзадачи через цель
+async function verifySubtaskOwner(subtaskId: string): Promise<boolean> {
+  const session = await auth();
+  if (!session?.user?.id) return false;
+
+  const subtask = await db.subtask.findUnique({
+    where: { id: subtaskId },
+    include: { goal: { select: { ownerId: true } } },
+  });
+
+  return subtask?.goal?.ownerId === session.user.id;
+}
 
 // Создать подзадачу
 export async function createSubtask(goalId: string, title: string, description?: string) {
+  // Проверяем права
+  const isOwner = await verifyGoalOwner(goalId);
+  if (!isOwner) {
+    throw new Error("Вы можете добавлять этапы только к своим целям");
+  }
   // Получаем максимальный order
   const maxOrder = await db.subtask.aggregate({
     where: { goalId },
@@ -26,6 +58,12 @@ export async function createSubtask(goalId: string, title: string, description?:
 
 // Обновить подзадачу
 export async function updateSubtask(subtaskId: string, data: { title?: string; description?: string }) {
+  // Проверяем права
+  const isOwner = await verifySubtaskOwner(subtaskId);
+  if (!isOwner) {
+    throw new Error("Вы можете редактировать только свои этапы");
+  }
+
   const subtask = await db.subtask.update({
     where: { id: subtaskId },
     data,
@@ -37,6 +75,12 @@ export async function updateSubtask(subtaskId: string, data: { title?: string; d
 
 // Удалить подзадачу
 export async function deleteSubtask(subtaskId: string) {
+  // Проверяем права
+  const isOwner = await verifySubtaskOwner(subtaskId);
+  if (!isOwner) {
+    throw new Error("Вы можете удалять только свои этапы");
+  }
+
   await db.subtask.delete({
     where: { id: subtaskId },
   });
@@ -46,6 +90,12 @@ export async function deleteSubtask(subtaskId: string) {
 
 // Отметить подзадачу выполненной (в рамках check-in)
 export async function completeSubtask(subtaskId: string, checkInId: string) {
+  // Проверяем права
+  const isOwner = await verifySubtaskOwner(subtaskId);
+  if (!isOwner) {
+    throw new Error("Вы можете отмечать только свои этапы");
+  }
+
   const subtask = await db.subtask.update({
     where: { id: subtaskId },
     data: {
@@ -65,6 +115,12 @@ export async function completeSubtask(subtaskId: string, checkInId: string) {
 
 // Отменить выполнение подзадачи
 export async function uncompleteSubtask(subtaskId: string) {
+  // Проверяем права
+  const isOwner = await verifySubtaskOwner(subtaskId);
+  if (!isOwner) {
+    throw new Error("Вы можете отменять только свои этапы");
+  }
+
   const subtask = await db.subtask.update({
     where: { id: subtaskId },
     data: {

@@ -9,13 +9,15 @@ type GoalCardProps = {
   onProgressChange?: (progress: number) => void;
   onStatusChange?: (status: string) => void;
   onClick?: () => void;
+  isOwner?: boolean; // Является ли текущий пользователь владельцем
 };
 
 export function GoalCard({ 
   goal, 
   hasConflict, 
   onProgressChange,
-  onClick 
+  onClick,
+  isOwner = false,
 }: GoalCardProps) {
   const resources = JSON.parse(goal.resources || "[]") as ResourceType[];
   const horizon = HORIZONS[goal.horizon as HorizonType] || HORIZONS.MID;
@@ -23,10 +25,11 @@ export function GoalCard({
 
   return (
     <div 
-      className={`card card-hover cursor-pointer animate-fade-in ${
-        hasConflict ? "conflict-indicator border-red-500/50" : ""
+      className={`card animate-fade-in group ${
+        isOwner ? "card-hover cursor-pointer" : ""
+      } ${hasConflict ? "conflict-indicator border-red-500/50" : ""
       } ${goal.status === "BLOCKED" ? "opacity-70" : ""}`}
-      onClick={onClick}
+      onClick={isOwner ? onClick : undefined}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
@@ -44,7 +47,19 @@ export function GoalCard({
         
         {/* Owner Avatar */}
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-xs font-bold">
+          {isOwner && (
+            <span className="text-xs text-[var(--muted)] opacity-0 group-hover:opacity-100 transition-opacity">
+              ✏️
+            </span>
+          )}
+          <div 
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+              isOwner 
+                ? "bg-gradient-to-br from-blue-400 to-purple-500 ring-2 ring-blue-400/50" 
+                : "bg-gradient-to-br from-gray-400 to-gray-500"
+            }`}
+            title={goal.owner.name || ""}
+          >
             {(goal.owner.name || "?").charAt(0)}
           </div>
         </div>
