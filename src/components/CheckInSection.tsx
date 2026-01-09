@@ -58,7 +58,7 @@ export function CheckInSection({
               {/* Header */}
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-sm font-bold">
-                  {checkIn.user.name.charAt(0)}
+                  {(checkIn.user.name || "?").charAt(0)}
                 </div>
                 <div>
                   <h3 className="font-medium">{checkIn.user.name}</h3>

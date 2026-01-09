@@ -144,7 +144,7 @@ export function ResolveConflictModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-sm font-bold">
-                {conflict.goalA.owner.name.charAt(0)}
+                {(conflict.goalA.owner.name || "?").charAt(0)}
               </div>
               <div>
                 <p className="text-sm text-[var(--muted)]">{conflict.goalA.owner.name}</p>
@@ -153,7 +153,7 @@ export function ResolveConflictModal({
             </div>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-sm font-bold">
-                {conflict.goalB.owner.name.charAt(0)}
+                {(conflict.goalB.owner.name || "?").charAt(0)}
               </div>
               <div>
                 <p className="text-sm text-[var(--muted)]">{conflict.goalB.owner.name}</p>

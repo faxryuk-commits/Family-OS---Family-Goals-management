@@ -270,7 +270,7 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
           <section key={member.user.id} className="mb-8">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-sm font-bold">
-                {member.user.name.charAt(0)}
+                {(member.user.name || "?").charAt(0)}
               </div>
               <h2 className="text-lg font-semibold">
                 {member.user.id === currentUserId ? "Мои цели" : `Цели: ${member.user.name}`}

@@ -141,10 +141,10 @@ export function AgreementsList({ agreements }: AgreementsListProps) {
                       <div className="p-3 bg-[var(--background)] rounded-lg">
                         <div className="flex items-center gap-2 mb-1">
                           <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-xs font-bold">
-                            {agreement.conflict.goalA.owner.name.charAt(0)}
+                            {(agreement.conflict.goalA.owner.name || "?").charAt(0)}
                           </div>
                           <span className="text-sm font-medium">
-                            {agreement.conflict.goalA.owner.name}
+                            {agreement.conflict.goalA.owner.name || "Участник"}
                           </span>
                         </div>
                         <p className="text-sm">
@@ -154,10 +154,10 @@ export function AgreementsList({ agreements }: AgreementsListProps) {
                       <div className="p-3 bg-[var(--background)] rounded-lg">
                         <div className="flex items-center gap-2 mb-1">
                           <div className="w-6 h-6 rounded-full bg-gradient-to-br from-pink-400 to-red-500 flex items-center justify-center text-xs font-bold">
-                            {agreement.conflict.goalB.owner.name.charAt(0)}
+                            {(agreement.conflict.goalB.owner.name || "?").charAt(0)}
                           </div>
                           <span className="text-sm font-medium">
-                            {agreement.conflict.goalB.owner.name}
+                            {agreement.conflict.goalB.owner.name || "Участник"}
                           </span>
                         </div>
                         <p className="text-sm">

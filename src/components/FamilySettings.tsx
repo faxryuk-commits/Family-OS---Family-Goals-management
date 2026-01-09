@@ -66,7 +66,7 @@ export function FamilySettings({
               className="flex items-center gap-3 p-3 bg-[var(--background)] rounded-lg"
             >
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-sm font-bold">
-                {member.user.name.charAt(0)}
+                {(member.user.name || "?").charAt(0)}
               </div>
               <div className="flex-1">
                 <p className="font-medium">{member.user.name}</p>

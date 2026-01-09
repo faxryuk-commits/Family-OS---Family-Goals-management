@@ -50,7 +50,7 @@ export function ConflictAlert({ conflict, onResolve }: ConflictAlertProps) {
         <div className="p-4 bg-[var(--background)] rounded-lg border border-[var(--card-border)] relative">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-sm font-bold">
-              {conflict.goalA.owner.name.charAt(0)}
+              {(conflict.goalA.owner.name || "?").charAt(0)}
             </div>
             <div>
               <span className="font-medium">{conflict.goalA.owner.name}</span>
@@ -71,7 +71,7 @@ export function ConflictAlert({ conflict, onResolve }: ConflictAlertProps) {
         <div className="p-4 bg-[var(--background)] rounded-lg border border-[var(--card-border)]">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-sm font-bold">
-              {conflict.goalB.owner.name.charAt(0)}
+              {(conflict.goalB.owner.name || "?").charAt(0)}
             </div>
             <div>
               <span className="font-medium">{conflict.goalB.owner.name}</span>

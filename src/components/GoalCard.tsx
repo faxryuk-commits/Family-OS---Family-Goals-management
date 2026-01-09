@@ -45,7 +45,7 @@ export function GoalCard({
         {/* Owner Avatar */}
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-xs font-bold">
-            {goal.owner.name.charAt(0)}
+            {(goal.owner.name || "?").charAt(0)}
           </div>
         </div>
       </div>
