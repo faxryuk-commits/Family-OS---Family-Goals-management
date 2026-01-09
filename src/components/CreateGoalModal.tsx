@@ -17,6 +17,7 @@ type CreateGoalModalProps = {
     metric?: string;
     resources: ResourceType[];
     ownerId: string;
+    subtasks?: string[];
   }) => void;
   members: { user: User }[];
   currentUserId: string;
@@ -70,6 +71,8 @@ export function CreateGoalModal({
   const [resources, setResources] = useState<ResourceType[]>([]);
   const [ownerId, setOwnerId] = useState(currentUserId);
   const [step, setStep] = useState(1);
+  const [subtasks, setSubtasks] = useState<string[]>([]);
+  const [newSubtask, setNewSubtask] = useState("");
 
   if (!isOpen) return null;
 
@@ -79,6 +82,17 @@ export function CreateGoalModal({
         ? prev.filter((r) => r !== resource)
         : [...prev, resource]
     );
+  };
+
+  const addSubtask = () => {
+    if (newSubtask.trim()) {
+      setSubtasks([...subtasks, newSubtask.trim()]);
+      setNewSubtask("");
+    }
+  };
+
+  const removeSubtask = (index: number) => {
+    setSubtasks(subtasks.filter((_, i) => i !== index));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -94,10 +108,13 @@ export function CreateGoalModal({
       metric: metric || undefined,
       resources,
       ownerId,
+      subtasks: subtasks.length > 0 ? subtasks : undefined,
     });
 
     // Reset form
     setTitle("");
+    setSubtasks([]);
+    setNewSubtask("");
     setDescription("");
     setType("PERSONAL");
     setHorizon("MID");
@@ -344,6 +361,64 @@ export function CreateGoalModal({
                   className="input"
                   placeholder="Например: Билеты куплены, отель забронирован"
                 />
+              </div>
+
+              {/* Subtasks */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="text-sm font-medium">📋 Этапы достижения</label>
+                  <HelpIcon text="Разбейте цель на конкретные шаги. При еженедельных отчётах вы будете отмечать их выполнение, а прогресс посчитается автоматически!" />
+                </div>
+                
+                {/* Existing subtasks */}
+                {subtasks.length > 0 && (
+                  <div className="space-y-2 mb-3">
+                    {subtasks.map((subtask, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 p-2 bg-[var(--background)] rounded-lg"
+                      >
+                        <span className="text-[var(--muted)]">{index + 1}.</span>
+                        <span className="flex-1">{subtask}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeSubtask(index)}
+                          className="text-red-400 hover:text-red-300 text-sm"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add new subtask */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newSubtask}
+                    onChange={(e) => setNewSubtask(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addSubtask();
+                      }
+                    }}
+                    className="input flex-1"
+                    placeholder="Добавить этап..."
+                  />
+                  <button
+                    type="button"
+                    onClick={addSubtask}
+                    disabled={!newSubtask.trim()}
+                    className="btn btn-secondary"
+                  >
+                    +
+                  </button>
+                </div>
+                <p className="text-xs text-[var(--muted)] mt-1">
+                  Нажмите Enter или + чтобы добавить. Можно добавить позже в редактировании.
+                </p>
               </div>
 
               {/* Submit */}

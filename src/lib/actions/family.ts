@@ -14,7 +14,10 @@ export async function getUserFamily(userId: string) {
             include: { user: true },
           },
           goals: {
-            include: { owner: true },
+            include: { 
+              owner: true,
+              subtasks: { orderBy: { order: "asc" } },
+            },
             orderBy: { createdAt: "desc" },
           },
           conflicts: {
@@ -25,7 +28,11 @@ export async function getUserFamily(userId: string) {
             },
           },
           checkIns: {
-            include: { user: true },
+            include: { 
+              user: true,
+              goalProgress: true,
+              completedSubtasks: true,
+            },
             orderBy: { createdAt: "desc" },
             take: 20,
           },

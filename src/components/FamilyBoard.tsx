@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Family, FamilyMember, Goal, User, Conflict, CheckIn, Agreement } from "@prisma/client";
+import { Family, FamilyMember, Goal, User, Conflict, CheckIn, Agreement, Subtask } from "@prisma/client";
 import { Header } from "./Header";
 import { GoalCard } from "./GoalCard";
 import { ConflictAlert } from "./ConflictAlert";
@@ -21,9 +21,14 @@ import { ResourceType } from "@/lib/types";
 import { EditGoalModal } from "./EditGoalModal";
 import { updateGoal, deleteGoal } from "@/lib/actions/goals";
 
+type GoalWithSubtasks = Goal & { 
+  owner: User;
+  subtasks: Subtask[];
+};
+
 type FamilyWithRelations = Family & {
   members: (FamilyMember & { user: User })[];
-  goals: (Goal & { owner: User })[];
+  goals: GoalWithSubtasks[];
   conflicts: (Conflict & {
     goalA: Goal & { owner: User };
     goalB: Goal & { owner: User };
@@ -82,11 +87,13 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
     metric?: string;
     resources: ResourceType[];
     ownerId: string;
+    subtasks?: string[];
   }) => {
     await createGoal({
       ...data,
       deadline: data.deadline ? new Date(data.deadline) : undefined,
       familyId: family.id,
+      subtasks: data.subtasks,
     });
   };
 
@@ -123,6 +130,8 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
     notes: string;
     blockers: string;
     wins: string;
+    completedSubtaskIds: string[];
+    goalComments: { goalId: string; comment: string }[];
   }) => {
     if (!currentUser) return;
 
@@ -132,8 +141,15 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
       notes: data.notes,
       blockers: data.blockers,
       wins: data.wins,
+      completedSubtaskIds: data.completedSubtaskIds,
+      goalComments: data.goalComments,
     });
   };
+
+  // Цели текущего пользователя для Check-in
+  const userGoals = family.goals.filter(
+    (g) => g.ownerId === currentUserId && (g.status === "ACTIVE" || g.status === "DRAFT")
+  );
 
   const handleUpdateGoal = async (data: {
     title: string;
@@ -346,6 +362,7 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
           onSubmit={handleCheckIn}
           currentUser={currentUser}
           hasCheckedIn={currentUserCheckedIn}
+          userGoals={userGoals}
         />
       )}
 

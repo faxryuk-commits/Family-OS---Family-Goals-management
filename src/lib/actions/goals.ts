@@ -14,6 +14,7 @@ export type CreateGoalInput = {
   resources: string[];
   ownerId: string;
   familyId: string;
+  subtasks?: string[]; // Названия подзадач
 };
 
 export async function createGoal(input: CreateGoalInput) {
@@ -29,8 +30,20 @@ export async function createGoal(input: CreateGoalInput) {
       ownerId: input.ownerId,
       familyId: input.familyId,
       status: "DRAFT",
+      // Создаём подзадачи если переданы
+      subtasks: input.subtasks?.length
+        ? {
+            create: input.subtasks.map((title, index) => ({
+              title,
+              order: index,
+            })),
+          }
+        : undefined,
     },
-    include: { owner: true },
+    include: { 
+      owner: true,
+      subtasks: { orderBy: { order: "asc" } },
+    },
   });
 
   // Проверяем конфликты с другими целями
@@ -110,7 +123,26 @@ export async function deleteGoal(goalId: string) {
 export async function getGoalsByFamily(familyId: string) {
   return db.goal.findMany({
     where: { familyId },
-    include: { owner: true },
+    include: { 
+      owner: true,
+      subtasks: { orderBy: { order: "asc" } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+// Получить цели пользователя с подзадачами
+export async function getUserGoalsWithSubtasks(userId: string, familyId: string) {
+  return db.goal.findMany({
+    where: { 
+      ownerId: userId,
+      familyId,
+      status: { in: ["ACTIVE", "DRAFT"] },
+    },
+    include: { 
+      owner: true,
+      subtasks: { orderBy: { order: "asc" } },
+    },
     orderBy: { createdAt: "desc" },
   });
 }

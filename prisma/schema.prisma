@@ -6,9 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ============================================
@@ -132,6 +131,29 @@ model Goal {
   // Conflicts where this goal is involved
   conflictsAsA Conflict[] @relation("GoalA")
   conflictsAsB Conflict[] @relation("GoalB")
+
+  // Subtasks (этапы достижения цели)
+  subtasks        Subtask[]
+  checkInProgress CheckInProgress[]
+}
+
+// Подзадачи / Этапы цели
+model Subtask {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  order       Int       @default(0) // Порядок отображения
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  goalId String
+  goal   Goal   @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  // Отмечено в каком check-in
+  completedInCheckInId String?
+  completedInCheckIn   CheckIn? @relation(fields: [completedInCheckInId], references: [id], onDelete: SetNull)
 }
 
 // ============================================
@@ -214,7 +236,26 @@ model CheckIn {
   familyId String
   family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
 
+  // Прогресс по целям в этом check-in
+  goalProgress     CheckInProgress[]
+  completedSubtasks Subtask[]
+
   @@unique([userId, familyId, week])
+}
+
+// Прогресс по цели в рамках check-in
+model CheckInProgress {
+  id        String   @id @default(cuid())
+  comment   String?  // Комментарий по цели
+  createdAt DateTime @default(now())
+
+  // Relations
+  checkInId String
+  checkIn   CheckIn @relation(fields: [checkInId], references: [id], onDelete: Cascade)
+  goalId    String
+  goal      Goal    @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@unique([checkInId, goalId])
 }
 
 // ============================================
