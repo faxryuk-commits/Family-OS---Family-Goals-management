@@ -1,0 +1,172 @@
+// FamilyOS - Family Goal Management System
+// Prisma Schema v5 (SQLite)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USERS & FAMILIES
+// ============================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  familyMemberships FamilyMember[]
+  goals             Goal[]
+  checkIns          CheckIn[]
+}
+
+model Family {
+  id        String   @id @default(cuid())
+  name      String
+  northStar String?  // Главная цель семьи
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  members    FamilyMember[]
+  goals      Goal[]
+  conflicts  Conflict[]
+  agreements Agreement[]
+  checkIns   CheckIn[]
+}
+
+model FamilyMember {
+  id       String   @id @default(cuid())
+  role     String   @default("ADULT") // ADULT, PARTNER, CHILD
+  joinedAt DateTime @default(now())
+
+  // Relations
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  familyId String
+  family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, familyId])
+}
+
+// ============================================
+// GOALS
+// ============================================
+
+model Goal {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  type        String    @default("PERSONAL") // FAMILY, PERSONAL
+  horizon     String    @default("MID") // SHORT, MID, LONG
+  status      String    @default("DRAFT") // DRAFT, BLOCKED, ACTIVE, PAUSED, COMPLETED, DROPPED
+  deadline    DateTime?
+  metric      String?   // Как понять, что достигли
+  progress    Int       @default(0) // 0-100
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Ресурсы, которые потребляет цель (JSON)
+  resources String? // ["MONEY", "TIME", "GEO", "ENERGY", "RISK"]
+
+  // Relations
+  ownerId  String
+  owner    User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  familyId String
+  family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  // Conflicts where this goal is involved
+  conflictsAsA Conflict[] @relation("GoalA")
+  conflictsAsB Conflict[] @relation("GoalB")
+}
+
+// ============================================
+// CONFLICTS & RESOLUTIONS
+// ============================================
+
+model Conflict {
+  id          String    @id @default(cuid())
+  type        String    // DIRECT, RESOURCE, PRIORITY
+  status      String    @default("UNRESOLVED") // UNRESOLVED, RESOLVING, RESOLVED
+  description String?
+  detectedAt  DateTime  @default(now())
+  resolvedAt  DateTime?
+
+  // Какие ресурсы пересекаются
+  sharedResources String? // ["GEO", "TIME"]
+
+  // Relations
+  goalAId String
+  goalA   Goal   @relation("GoalA", fields: [goalAId], references: [id], onDelete: Cascade)
+  goalBId String
+  goalB   Goal   @relation("GoalB", fields: [goalBId], references: [id], onDelete: Cascade)
+
+  familyId String
+  family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  resolution Resolution?
+  agreement  Agreement?
+}
+
+model Resolution {
+  id           String    @id @default(cuid())
+  strategy     String    // COMPROMISE, SEQUENCE, TRANSFORM, PRIORITY, DROP
+  description  String?
+  cost         String?   // Кто чем жертвует
+  compensation String?   // Что получает взамен
+  reviewDate   DateTime? // Когда пересмотреть
+  createdAt    DateTime  @default(now())
+
+  // Relations
+  conflictId String   @unique
+  conflict   Conflict @relation(fields: [conflictId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// AGREEMENTS
+// ============================================
+
+model Agreement {
+  id         String    @id @default(cuid())
+  title      String
+  terms      String    // Условия договора
+  validUntil DateTime?
+  status     String    @default("ACTIVE") // ACTIVE, EXPIRED, REVISED, CANCELLED
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // Relations
+  conflictId String?   @unique
+  conflict   Conflict? @relation(fields: [conflictId], references: [id], onDelete: SetNull)
+  familyId   String
+  family     Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// CHECK-INS
+// ============================================
+
+model CheckIn {
+  id        String   @id @default(cuid())
+  week      String   // Format: "2024-W01"
+  notes     String?
+  blockers  String?
+  wins      String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  familyId String
+  family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, familyId, week])
+}
