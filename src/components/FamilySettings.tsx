@@ -37,12 +37,22 @@ export function FamilySettings({
     }
   };
 
-  const handleCopyCode = () => {
-    if (newInviteCode) {
-      navigator.clipboard.writeText(newInviteCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+  // Получаем URL сайта
+  const siteUrl = typeof window !== "undefined" 
+    ? window.location.origin 
+    : "https://family-os-family-goals-management.vercel.app";
+
+  const getInviteLink = (code: string) => `${siteUrl}/join?code=${code}`;
+  
+  const getInviteMessage = (code: string) => 
+    `🏠 Присоединяйся к нашей семье в FamilyOS!\n\n` +
+    `Перейди по ссылке:\n${getInviteLink(code)}\n\n` +
+    `Или введи код: ${code}`;
+
+  const handleCopyLink = (code: string) => {
+    navigator.clipboard.writeText(getInviteMessage(code));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleSaveNorthStar = async () => {
@@ -91,22 +101,32 @@ export function FamilySettings({
         </h2>
 
         {newInviteCode ? (
-          <div className="text-center py-6">
-            <p className="text-sm text-[var(--muted)] mb-4">
-              Отправьте этот код партнёру:
+          <div className="py-4">
+            <p className="text-sm text-[var(--muted)] mb-4 text-center">
+              Отправьте это приглашение партнёру:
             </p>
-            <div
-              onClick={handleCopyCode}
-              className="inline-flex items-center gap-3 px-6 py-4 bg-[var(--background)] rounded-xl cursor-pointer hover:bg-[var(--card-hover)] transition-colors"
-            >
-              <span className="text-3xl font-mono font-bold tracking-wider">
-                {newInviteCode}
-              </span>
-              <span className="text-[var(--muted)]">
-                {copied ? "✅" : "📋"}
-              </span>
+            
+            {/* Invite Message Preview */}
+            <div className="p-4 bg-[var(--background)] rounded-xl mb-4 text-sm">
+              <p className="mb-2">🏠 Присоединяйся к нашей семье в FamilyOS!</p>
+              <p className="text-[var(--muted)] mb-2">Перейди по ссылке:</p>
+              <p className="text-blue-400 break-all mb-2">{getInviteLink(newInviteCode)}</p>
+              <p className="text-[var(--muted)]">Или введи код: <span className="font-mono font-bold">{newInviteCode}</span></p>
             </div>
-            <p className="text-xs text-[var(--muted)] mt-4">
+
+            {/* Copy Button */}
+            <button
+              onClick={() => handleCopyLink(newInviteCode)}
+              className="btn btn-primary w-full flex items-center justify-center gap-2"
+            >
+              {copied ? (
+                <>✅ Скопировано!</>
+              ) : (
+                <>📋 Скопировать приглашение</>
+              )}
+            </button>
+            
+            <p className="text-xs text-[var(--muted)] mt-4 text-center">
               Код действует 7 дней
             </p>
           </div>
@@ -135,16 +155,24 @@ export function FamilySettings({
               {invites.map((invite) => (
                 <div
                   key={invite.id}
-                  className="flex items-center justify-between p-2 bg-[var(--background)] rounded-lg text-sm"
+                  className="flex items-center justify-between p-3 bg-[var(--background)] rounded-lg text-sm"
                 >
-                  <span className="font-mono">{invite.code}</span>
-                  <span className="text-[var(--muted)]">
-                    до{" "}
-                    {new Date(invite.expiresAt).toLocaleDateString("ru-RU", {
-                      day: "numeric",
-                      month: "short",
-                    })}
-                  </span>
+                  <div>
+                    <span className="font-mono font-bold">{invite.code}</span>
+                    <span className="text-[var(--muted)] ml-2">
+                      до{" "}
+                      {new Date(invite.expiresAt).toLocaleDateString("ru-RU", {
+                        day: "numeric",
+                        month: "short",
+                      })}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleCopyLink(invite.code)}
+                    className="btn btn-secondary btn-sm"
+                  >
+                    📋 Копировать
+                  </button>
                 </div>
               ))}
             </div>

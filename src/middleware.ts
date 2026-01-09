@@ -6,7 +6,7 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
 
   // Публичные пути - не требуют авторизации
-  const publicPaths = ["/login", "/api/auth"];
+  const publicPaths = ["/login", "/join", "/api/auth"];
   const isPublicPath = publicPaths.some(path => pathname.startsWith(path));
 
   // Разрешаем публичные пути
