@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { toggleReaction, REACTION_EMOJIS, ReactionEmoji, ReactionTarget } from "@/lib/actions/reactions";
+import { toggleReaction } from "@/lib/actions/reactions";
+import { REACTION_EMOJIS, ReactionEmoji, ReactionTarget } from "@/lib/reaction-types";
 
 type ReactionUser = {
   id: string;
