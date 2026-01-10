@@ -42,8 +42,9 @@ export function Reactions({
       // Удаляем реакцию
       setMyReaction(null);
       setLocalReactions(prev => {
-        const updated = { ...prev };
-        if (updated[emoji]) {
+        const safePrev = prev && typeof prev === 'object' ? prev : {};
+        const updated = { ...safePrev };
+        if (updated[emoji] && Array.isArray(updated[emoji])) {
           updated[emoji] = updated[emoji].filter(u => u.id !== currentUserId);
           if (updated[emoji].length === 0) {
             delete updated[emoji];
@@ -55,10 +56,11 @@ export function Reactions({
       // Добавляем/меняем реакцию
       setMyReaction(emoji);
       setLocalReactions(prev => {
-        const updated = { ...prev };
+        const safePrev = prev && typeof prev === 'object' ? prev : {};
+        const updated = { ...safePrev };
         
         // Удаляем из старой реакции
-        if (oldMyReaction && updated[oldMyReaction]) {
+        if (oldMyReaction && updated[oldMyReaction] && Array.isArray(updated[oldMyReaction])) {
           updated[oldMyReaction] = updated[oldMyReaction].filter(u => u.id !== currentUserId);
           if (updated[oldMyReaction].length === 0) {
             delete updated[oldMyReaction];
@@ -66,7 +68,7 @@ export function Reactions({
         }
         
         // Добавляем в новую
-        if (!updated[emoji]) {
+        if (!updated[emoji] || !Array.isArray(updated[emoji])) {
           updated[emoji] = [];
         }
         if (!updated[emoji].find(u => u.id === currentUserId)) {
@@ -86,7 +88,7 @@ export function Reactions({
       } catch (error) {
         // Откатываем изменения при ошибке
         setMyReaction(oldMyReaction);
-        setLocalReactions(reactions);
+        setLocalReactions(safeReactions);
         console.error("Ошибка при добавлении реакции:", error);
         // Можно показать toast уведомление здесь
       }
