@@ -439,13 +439,21 @@ export function FamilyBoard({ family, currentUserId, notifications = [], unreadN
                             <Reactions
                               targetType="checkIn"
                               targetId={item.id}
-                              reactions={(item.data as CheckInWithReactions).reactions?.reduce((acc, r) => {
-                                if (!acc[r.emoji]) acc[r.emoji] = [];
-                                acc[r.emoji].push(r.user);
-                                return acc;
-                              }, {} as Record<string, { id: string; name: string | null; image: string | null }[]>) || {}}
+                              reactions={(() => {
+                                const checkInReactions = (item.data as CheckInWithReactions).reactions;
+                                const reactionsArray = Array.isArray(checkInReactions) ? checkInReactions : [];
+                                return reactionsArray.reduce((acc, r) => {
+                                  if (!acc[r.emoji]) acc[r.emoji] = [];
+                                  acc[r.emoji].push(r.user);
+                                  return acc;
+                                }, {} as Record<string, { id: string; name: string | null; image: string | null }[]>);
+                              })()}
                               currentUserId={currentUserId}
-                              myReaction={(item.data as CheckInWithReactions).reactions?.find(r => r.userId === currentUserId)?.emoji}
+                              myReaction={(() => {
+                                const checkInReactions = (item.data as CheckInWithReactions).reactions;
+                                const reactionsArray = Array.isArray(checkInReactions) ? checkInReactions : [];
+                                return reactionsArray.find(r => r.userId === currentUserId)?.emoji;
+                              })()}
                               compact
                             />
                           </div>

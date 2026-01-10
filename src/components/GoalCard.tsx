@@ -47,8 +47,9 @@ export function GoalCard({
   const commentCount = goal._count?.comments || 0;
   const reactionCount = goal._count?.reactions || 0;
 
-  // Группируем реакции по эмодзи
-  const groupedReactions = (goal.reactions || []).reduce((acc, reaction) => {
+  // Группируем реакции по эмодзи (с защитой от undefined)
+  const reactionsArray = Array.isArray(goal.reactions) ? goal.reactions : [];
+  const groupedReactions = reactionsArray.reduce((acc, reaction) => {
     if (!acc[reaction.emoji]) {
       acc[reaction.emoji] = [];
     }
@@ -58,7 +59,7 @@ export function GoalCard({
 
   // Находим реакцию текущего пользователя
   const myReaction = currentUserId 
-    ? goal.reactions?.find(r => r.userId === currentUserId)?.emoji 
+    ? reactionsArray.find(r => r.userId === currentUserId)?.emoji 
     : null;
 
   return (
