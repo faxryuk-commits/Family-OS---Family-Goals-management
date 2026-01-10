@@ -83,6 +83,7 @@ model User {
   checkIns          CheckIn[]
   achievements      UserAchievement[]
   comments          Comment[]
+  reactions         Reaction[]
   
   // Notifications
   notifications     Notification[]
@@ -194,6 +195,7 @@ model Goal {
   subtasks        Subtask[]
   checkInProgress CheckInProgress[]
   comments        Comment[]
+  reactions       Reaction[] @relation("GoalReactions")
 }
 
 // Подзадачи / Этапы цели
@@ -230,6 +232,38 @@ model Comment {
   author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
   goalId   String
   goal     Goal   @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  
+  // Reactions
+  reactions Reaction[] @relation("CommentReactions")
+}
+
+// ============================================
+// REACTIONS (Реакции на цели, комментарии, check-ins)
+// ============================================
+
+model Reaction {
+  id        String   @id @default(cuid())
+  emoji     String   // 👍, ❤️, 🎉, 🔥, 💪, 👀
+  createdAt DateTime @default(now())
+
+  // Кто оставил реакцию
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // К чему реакция (полиморфная связь)
+  goalId    String?
+  goal      Goal?    @relation("GoalReactions", fields: [goalId], references: [id], onDelete: Cascade)
+  
+  commentId String?
+  comment   Comment? @relation("CommentReactions", fields: [commentId], references: [id], onDelete: Cascade)
+  
+  checkInId String?
+  checkIn   CheckIn? @relation("CheckInReactions", fields: [checkInId], references: [id], onDelete: Cascade)
+
+  // Один пользователь — одна реакция на объект
+  @@unique([userId, goalId])
+  @@unique([userId, commentId])
+  @@unique([userId, checkInId])
 }
 
 // ============================================
@@ -315,6 +349,7 @@ model CheckIn {
   // Прогресс по целям в этом check-in
   goalProgress     CheckInProgress[]
   completedSubtasks Subtask[]
+  reactions        Reaction[] @relation("CheckInReactions")
 
   @@unique([userId, familyId, week])
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Family, FamilyMember, Goal, User, Conflict, CheckIn, Agreement, Subtask, Comment, Notification } from "@prisma/client";
+import { Family, FamilyMember, Goal, User, Conflict, CheckIn, Agreement, Subtask, Comment, Notification, Reaction } from "@prisma/client";
 import { Header } from "./Header";
 import { GoalCard } from "./GoalCard";
 import { ConflictAlert } from "./ConflictAlert";
@@ -11,6 +11,7 @@ import { CheckInModal } from "./CheckInModal";
 import { GoalDetailsModal } from "./GoalDetailsModal";
 import { Onboarding, useOnboarding } from "./Onboarding";
 import { HelpIcon } from "./Tooltip";
+import { Reactions } from "./Reactions";
 import { createGoal } from "@/lib/actions/goals";
 import { updateNorthStar } from "@/lib/actions/family";
 import { resolveConflict } from "@/lib/actions/conflicts";
@@ -37,11 +38,21 @@ type CommentWithAuthor = Comment & {
   author: Author;
 };
 
+type ReactionWithUser = Reaction & {
+  user: { id: string; name: string | null; image: string | null };
+};
+
 type GoalWithSubtasks = Goal & { 
   owner: User;
   subtasks: Subtask[];
   comments: CommentWithAuthor[];
-  _count: { comments: number };
+  reactions: ReactionWithUser[];
+  _count: { comments: number; reactions: number };
+};
+
+type CheckInWithReactions = CheckIn & { 
+  user: User;
+  reactions: ReactionWithUser[];
 };
 
 type ExtendedUser = {
@@ -66,7 +77,7 @@ type FamilyWithRelations = Family & {
     goalA: Goal & { owner: User };
     goalB: Goal & { owner: User };
   })[];
-  checkIns: (CheckIn & { user: User })[];
+  checkIns: CheckInWithReactions[];
   agreements: Agreement[];
 };
 
@@ -406,7 +417,7 @@ export function FamilyBoard({ family, currentUserId, notifications = [], unreadN
 
                       {/* Content */}
                       {item.type === "checkin" && (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           {item.data.wins && (
                             <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                               <div className="text-xs text-green-600 font-medium mb-1">🏆 Победы</div>
@@ -422,6 +433,22 @@ export function FamilyBoard({ family, currentUserId, notifications = [], unreadN
                               <div className="text-sm text-red-800">{item.data.blockers}</div>
                             </div>
                           )}
+                          
+                          {/* Reactions for check-in */}
+                          <div className="pt-2 border-t border-gray-100">
+                            <Reactions
+                              targetType="checkIn"
+                              targetId={item.id}
+                              reactions={(item.data as CheckInWithReactions).reactions?.reduce((acc, r) => {
+                                if (!acc[r.emoji]) acc[r.emoji] = [];
+                                acc[r.emoji].push(r.user);
+                                return acc;
+                              }, {} as Record<string, { id: string; name: string | null; image: string | null }[]>) || {}}
+                              currentUserId={currentUserId}
+                              myReaction={(item.data as CheckInWithReactions).reactions?.find(r => r.userId === currentUserId)?.emoji}
+                              compact
+                            />
+                          </div>
                         </div>
                       )}
 
@@ -478,6 +505,7 @@ export function FamilyBoard({ family, currentUserId, notifications = [], unreadN
                               onClick={() => setViewingGoal(goal)}
                               isOwner={goal.ownerId === currentUserId}
                               isAssignedToMe={goal.assignedToId === currentUserId}
+                              currentUserId={currentUserId}
                             />
                           ))}
                         </div>
@@ -505,6 +533,7 @@ export function FamilyBoard({ family, currentUserId, notifications = [], unreadN
                                 onClick={() => setViewingGoal(goal)}
                                 isOwner={goal.ownerId === currentUserId}
                                 isAssignedToMe={goal.assignedToId === currentUserId}
+                                currentUserId={currentUserId}
                               />
                             ))}
                           </div>

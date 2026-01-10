@@ -194,6 +194,13 @@ export async function getGoalsByFamily(familyId: string) {
     include: { 
       owner: true,
       subtasks: { orderBy: { order: "asc" } },
+      reactions: {
+        include: {
+          user: {
+            select: { id: true, name: true, image: true },
+          },
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
   });

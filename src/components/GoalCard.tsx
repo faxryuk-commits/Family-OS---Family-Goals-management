@@ -1,7 +1,8 @@
 "use client";
 
-import { Goal, User } from "@prisma/client";
+import { Goal, User, Reaction } from "@prisma/client";
 import { RESOURCES, HORIZONS, STATUSES, ResourceType, HorizonType, StatusType } from "@/lib/types";
+import { Reactions } from "./Reactions";
 
 type AssignedUser = {
   id: string;
@@ -9,14 +10,25 @@ type AssignedUser = {
   image: string | null;
 };
 
+type ReactionWithUser = Reaction & {
+  user: { id: string; name: string | null; image: string | null };
+};
+
 type GoalCardProps = {
-  goal: Goal & { owner: User; assignedTo?: AssignedUser | null; _count?: { comments: number }; images?: string | null };
+  goal: Goal & { 
+    owner: User; 
+    assignedTo?: AssignedUser | null; 
+    _count?: { comments: number; reactions?: number }; 
+    images?: string | null;
+    reactions?: ReactionWithUser[];
+  };
   hasConflict?: boolean;
   onProgressChange?: (progress: number) => void;
   onStatusChange?: (status: string) => void;
   onClick?: () => void;
   isOwner?: boolean; // Является ли текущий пользователь владельцем
   isAssignedToMe?: boolean; // Отмечен ли текущий пользователь
+  currentUserId?: string;
 };
 
 export function GoalCard({ 
@@ -26,12 +38,28 @@ export function GoalCard({
   onClick,
   isOwner = false,
   isAssignedToMe = false,
+  currentUserId,
 }: GoalCardProps) {
   const resources = JSON.parse(goal.resources || "[]") as ResourceType[];
   const images = goal.images ? JSON.parse(goal.images) as string[] : [];
   const horizon = HORIZONS[goal.horizon as HorizonType] || HORIZONS.MID;
   const status = STATUSES[goal.status as StatusType] || STATUSES.DRAFT;
   const commentCount = goal._count?.comments || 0;
+  const reactionCount = goal._count?.reactions || 0;
+
+  // Группируем реакции по эмодзи
+  const groupedReactions = (goal.reactions || []).reduce((acc, reaction) => {
+    if (!acc[reaction.emoji]) {
+      acc[reaction.emoji] = [];
+    }
+    acc[reaction.emoji].push(reaction.user);
+    return acc;
+  }, {} as Record<string, { id: string; name: string | null; image: string | null }[]>);
+
+  // Находим реакцию текущего пользователя
+  const myReaction = currentUserId 
+    ? goal.reactions?.find(r => r.userId === currentUserId)?.emoji 
+    : null;
 
   return (
     <div 
@@ -171,6 +199,20 @@ export function GoalCard({
         )}
       </div>
 
+      {/* Reactions */}
+      {currentUserId && (
+        <div className="mt-3 pt-3 border-t border-[var(--card-border)]" onClick={(e) => e.stopPropagation()}>
+          <Reactions
+            targetType="goal"
+            targetId={goal.id}
+            reactions={groupedReactions}
+            currentUserId={currentUserId}
+            myReaction={myReaction}
+            compact
+          />
+        </div>
+      )}
+
       {/* Footer: Deadline + Comments */}
       <div className="flex items-center justify-between text-sm text-[var(--muted)] mt-3 pt-3 border-t border-[var(--card-border)]">
         <div className="flex items-center gap-3">
@@ -189,6 +231,12 @@ export function GoalCard({
             <div className="flex items-center gap-1">
               <span>💬</span>
               <span>{commentCount}</span>
+            </div>
+          )}
+          {reactionCount > 0 && !currentUserId && (
+            <div className="flex items-center gap-1">
+              <span>👍</span>
+              <span>{reactionCount}</span>
             </div>
           )}
         </div>

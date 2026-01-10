@@ -57,8 +57,15 @@ export async function getUserFamily(userId: string) {
                 orderBy: { createdAt: "desc" },
                 take: 3, // Показываем последние 3 комментария
               },
+              reactions: {
+                include: {
+                  user: {
+                    select: { id: true, name: true, image: true },
+                  },
+                },
+              },
               _count: {
-                select: { comments: true },
+                select: { comments: true, reactions: true },
               },
             },
             orderBy: { createdAt: "desc" },
@@ -75,6 +82,13 @@ export async function getUserFamily(userId: string) {
               user: true,
               goalProgress: true,
               completedSubtasks: true,
+              reactions: {
+                include: {
+                  user: {
+                    select: { id: true, name: true, image: true },
+                  },
+                },
+              },
             },
             orderBy: { createdAt: "desc" },
             take: 20,
