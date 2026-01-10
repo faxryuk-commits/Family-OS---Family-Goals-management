@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Goal, Subtask, Comment } from "@prisma/client";
+import { Goal, Subtask, Comment, Reaction } from "@prisma/client";
 import { ResourceType, RESOURCES, HORIZONS, STATUSES, HorizonType, StatusType } from "@/lib/types";
 import { createComment, getGoalComments, deleteComment } from "@/lib/actions/comments";
 import { getLevelFromXp } from "@/lib/gamification-utils";
+import { Reactions } from "./Reactions";
 
 type Author = {
   id: string;
@@ -23,6 +24,12 @@ type AssignedUser = {
   image: string | null;
 };
 
+type ReactionUser = {
+  id: string;
+  name: string | null;
+  image: string | null;
+};
+
 type GoalWithDetails = Goal & {
   owner: Author;
   assignedTo?: AssignedUser | null;
@@ -30,6 +37,7 @@ type GoalWithDetails = Goal & {
   comments: CommentWithAuthor[];
   _count: { comments: number };
   images?: string | null;
+  reactions?: (Reaction & { user: ReactionUser })[];
 };
 
 type GoalDetailsModalProps = {
@@ -59,6 +67,16 @@ function formatRelativeTime(date: Date): string {
   if (hours < 24) return `${hours} ч`;
   if (days < 7) return `${days} д`;
   return new Date(date).toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
+}
+
+function formatReactions(reactions: (Reaction & { user: ReactionUser })[]): Record<string, ReactionUser[]> {
+  return (reactions || []).reduce((acc, reaction) => {
+    if (!acc[reaction.emoji]) {
+      acc[reaction.emoji] = [];
+    }
+    acc[reaction.emoji].push(reaction.user);
+    return acc;
+  }, {} as Record<string, ReactionUser[]>);
 }
 
 export function GoalDetailsModal({
@@ -262,6 +280,18 @@ export function GoalDetailsModal({
               <div className="text-sm text-indigo-800">{goal.metric}</div>
             </div>
           )}
+
+          {/* Reactions Section */}
+          <div className="pt-2">
+            <div className="text-xs text-[var(--muted)] mb-2">Реакции</div>
+            <Reactions
+              targetType="GOAL"
+              targetId={goal.id}
+              reactions={formatReactions(goal.reactions || [])}
+              currentUserId={currentUserId}
+              myReaction={(goal.reactions || []).find(r => r.userId === currentUserId)?.emoji || null}
+            />
+          </div>
 
           {/* Comments Section */}
           <div className="border-t border-[var(--border)] pt-4">
