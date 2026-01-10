@@ -27,7 +27,9 @@ export function Reactions({
   compact = false,
 }: ReactionsProps) {
   const [isPending, startTransition] = useTransition();
-  const [localReactions, setLocalReactions] = useState(reactions);
+  // Защита от undefined reactions
+  const safeReactions = reactions && typeof reactions === 'object' ? reactions : {};
+  const [localReactions, setLocalReactions] = useState<Record<string, ReactionUser[]>>(safeReactions);
   const [myReaction, setMyReaction] = useState(initialMyReaction);
   const [showPicker, setShowPicker] = useState(false);
 
@@ -96,14 +98,18 @@ export function Reactions({
     e.stopPropagation();
   };
 
+  // Защита от неправильных данных
+  const safeLocalReactions = localReactions && typeof localReactions === 'object' ? localReactions : {};
+
   // Считаем общее количество реакций
-  const totalReactions = Object.values(localReactions).reduce(
-    (sum, users) => sum + users.length,
+  const totalReactions = Object.values(safeLocalReactions).reduce(
+    (sum, users) => sum + (Array.isArray(users) ? users.length : 0),
     0
   );
 
   // Сортируем эмодзи по количеству реакций
-  const sortedEmojis = Object.entries(localReactions)
+  const sortedEmojis = Object.entries(safeLocalReactions)
+    .filter(([, users]) => Array.isArray(users) && users.length > 0)
     .sort((a, b) => b[1].length - a[1].length)
     .map(([emoji]) => emoji);
 
@@ -124,10 +130,10 @@ export function Reactions({
                 ? "bg-blue-100 text-blue-700 border border-blue-300"
                 : "bg-gray-100 hover:bg-gray-200 text-gray-700"
             }`}
-            title={localReactions[emoji].map(u => u.name || "Аноним").join(", ")}
+            title={(safeLocalReactions[emoji] || []).map(u => u.name || "Аноним").join(", ")}
           >
             <span>{emoji}</span>
-            <span className="text-xs font-medium">{localReactions[emoji].length}</span>
+            <span className="text-xs font-medium">{(safeLocalReactions[emoji] || []).length}</span>
           </button>
         ))}
 
@@ -173,7 +179,7 @@ export function Reactions({
     <div className="flex items-center gap-2 flex-wrap">
       {/* Existing reactions */}
       {sortedEmojis.map(emoji => {
-        const users = localReactions[emoji];
+        const users = safeLocalReactions[emoji] || [];
         const isMyReaction = myReaction === emoji;
         
         return (
@@ -245,14 +251,18 @@ export function ReactionsSummary({
 }: {
   reactions: Record<string, { id: string; name: string | null }[]>;
 }) {
-  const totalReactions = Object.values(reactions).reduce(
-    (sum, users) => sum + users.length,
+  // Защита от undefined
+  const safeReactions = reactions && typeof reactions === 'object' ? reactions : {};
+  
+  const totalReactions = Object.values(safeReactions).reduce(
+    (sum, users) => sum + (Array.isArray(users) ? users.length : 0),
     0
   );
 
   if (totalReactions === 0) return null;
 
-  const topEmojis = Object.entries(reactions)
+  const topEmojis = Object.entries(safeReactions)
+    .filter(([, users]) => Array.isArray(users) && users.length > 0)
     .sort((a, b) => b[1].length - a[1].length)
     .slice(0, 3)
     .map(([emoji]) => emoji);
