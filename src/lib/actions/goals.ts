@@ -30,6 +30,7 @@ export type CreateGoalInput = {
   ownerId: string;
   familyId: string;
   subtasks?: string[]; // Названия подзадач
+  assignedToId?: string; // Отметить члена семьи
 };
 
 export async function createGoal(input: CreateGoalInput) {
@@ -44,6 +45,7 @@ export async function createGoal(input: CreateGoalInput) {
       resources: JSON.stringify(input.resources),
       ownerId: input.ownerId,
       familyId: input.familyId,
+      assignedToId: input.assignedToId,
       status: "DRAFT",
       // Создаём подзадачи если переданы
       subtasks: input.subtasks?.length
@@ -57,6 +59,7 @@ export async function createGoal(input: CreateGoalInput) {
     },
     include: { 
       owner: true,
+      assignedTo: true,
       subtasks: { orderBy: { order: "asc" } },
     },
   });

@@ -17,8 +17,15 @@ type CommentWithAuthor = Comment & {
   author: Author;
 };
 
+type AssignedUser = {
+  id: string;
+  name: string | null;
+  image: string | null;
+};
+
 type GoalWithDetails = Goal & {
   owner: Author;
+  assignedTo?: AssignedUser | null;
   subtasks: Subtask[];
   comments: CommentWithAuthor[];
   _count: { comments: number };
@@ -138,11 +145,17 @@ export function GoalDetailsModal({
               <span className="text-xs text-[var(--muted)]">{horizon.label}</span>
             </div>
             <h2 className="text-lg font-semibold">{goal.title}</h2>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
               <div className={`w-5 h-5 rounded bg-gradient-to-br ${getLevelColor(goal.owner.level)} flex items-center justify-center text-[10px] font-bold text-white`}>
                 {(goal.owner.name || "?").charAt(0)}
               </div>
               <span className="text-sm text-[var(--muted)]">{goal.owner.name}</span>
+              {goal.assignedTo && (
+                <span className="text-sm text-pink-500 flex items-center gap-1">
+                  <span>→ 💝</span>
+                  <span>{goal.assignedTo.name}</span>
+                </span>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">

@@ -3,13 +3,20 @@
 import { Goal, User } from "@prisma/client";
 import { RESOURCES, HORIZONS, STATUSES, ResourceType, HorizonType, StatusType } from "@/lib/types";
 
+type AssignedUser = {
+  id: string;
+  name: string | null;
+  image: string | null;
+};
+
 type GoalCardProps = {
-  goal: Goal & { owner: User; _count?: { comments: number } };
+  goal: Goal & { owner: User; assignedTo?: AssignedUser | null; _count?: { comments: number } };
   hasConflict?: boolean;
   onProgressChange?: (progress: number) => void;
   onStatusChange?: (status: string) => void;
   onClick?: () => void;
   isOwner?: boolean; // Является ли текущий пользователь владельцем
+  isAssignedToMe?: boolean; // Отмечен ли текущий пользователь
 };
 
 export function GoalCard({ 
@@ -18,6 +25,7 @@ export function GoalCard({
   onProgressChange,
   onClick,
   isOwner = false,
+  isAssignedToMe = false,
 }: GoalCardProps) {
   const resources = JSON.parse(goal.resources || "[]") as ResourceType[];
   const horizon = HORIZONS[goal.horizon as HorizonType] || HORIZONS.MID;
@@ -28,19 +36,31 @@ export function GoalCard({
     <div 
       className={`card animate-fade-in group card-hover cursor-pointer ${
         hasConflict ? "conflict-indicator border-red-500/50" : ""
-      } ${goal.status === "BLOCKED" ? "opacity-70" : ""}`}
+      } ${goal.status === "BLOCKED" ? "opacity-70" : ""} ${
+        isAssignedToMe ? "ring-2 ring-pink-400/50 bg-pink-50/30" : ""
+      }`}
       onClick={onClick}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className={`badge ${horizon.color}`}>
               {horizon.label}
             </span>
             <span className={`badge ${status.color}`}>
               {status.label}
             </span>
+            {isAssignedToMe && (
+              <span className="badge bg-pink-100 text-pink-600 border-pink-200">
+                💝 Для тебя
+              </span>
+            )}
+            {goal.assignedTo && !isAssignedToMe && (
+              <span className="badge bg-pink-50 text-pink-500 border-pink-100">
+                👋 {goal.assignedTo.name}
+              </span>
+            )}
           </div>
           <h3 className="text-lg font-semibold">{goal.title}</h3>
         </div>

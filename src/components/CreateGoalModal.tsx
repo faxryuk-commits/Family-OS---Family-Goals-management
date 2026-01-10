@@ -22,6 +22,7 @@ type CreateGoalModalProps = {
     resources: ResourceType[];
     ownerId: string;
     subtasks?: string[];
+    assignedToId?: string;
   }) => void;
   members: { user: UserBasic }[];
   currentUserId: string;
@@ -77,6 +78,7 @@ export function CreateGoalModal({
   const [step, setStep] = useState(1);
   const [subtasks, setSubtasks] = useState<string[]>([]);
   const [newSubtask, setNewSubtask] = useState("");
+  const [assignedToId, setAssignedToId] = useState<string | undefined>(undefined);
 
   if (!isOpen) return null;
 
@@ -113,6 +115,7 @@ export function CreateGoalModal({
       resources,
       ownerId,
       subtasks: subtasks.length > 0 ? subtasks : undefined,
+      assignedToId: assignedToId || undefined,
     });
 
     // Reset form
@@ -125,22 +128,26 @@ export function CreateGoalModal({
     setDeadline("");
     setMetric("");
     setResources([]);
+    setAssignedToId(undefined);
     setStep(1);
     onClose();
   };
 
   const canProceed = step === 1 ? title.trim().length > 0 : true;
 
+  // Другие члены семьи (кроме текущего)
+  const otherMembers = members.filter(m => m.user.id !== currentUserId);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg card animate-fade-in max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full sm:max-w-lg bg-[var(--card)] border border-[var(--border)] sm:rounded-2xl rounded-t-2xl shadow-xl max-h-[85vh] sm:max-h-[90vh] overflow-y-auto animate-slide-up p-5">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -231,23 +238,48 @@ export function CreateGoalModal({
                 </div>
               </div>
 
-              {/* Owner (for personal goals) */}
-              {type === "PERSONAL" && members.length > 1 && (
+              {/* Assign to (отметить члена семьи) */}
+              {otherMembers.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Чья это цель?
-                  </label>
-                  <select
-                    value={ownerId}
-                    onChange={(e) => setOwnerId(e.target.value)}
-                    className="select"
-                  >
-                    {members.map((member) => (
-                      <option key={member.user.id} value={member.user.id}>
-                        {member.user.name} {member.user.id === currentUserId ? "(Я)" : ""}
-                      </option>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="text-sm font-medium">Отметить 👋</label>
+                    <HelpIcon text="Отметьте члена семьи, если хотите чтобы он был в курсе этой цели. Например: запрос на подарок, предложение сходить куда-то вместе." />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAssignedToId(undefined)}
+                      className={`px-3 py-2 rounded-lg border text-sm transition-all ${
+                        !assignedToId
+                          ? "border-gray-500 bg-gray-500/10"
+                          : "border-[var(--card-border)] hover:border-[var(--muted)]"
+                      }`}
+                    >
+                      Никого
+                    </button>
+                    {otherMembers.map((member) => (
+                      <button
+                        key={member.user.id}
+                        type="button"
+                        onClick={() => setAssignedToId(member.user.id)}
+                        className={`px-3 py-2 rounded-lg border text-sm transition-all flex items-center gap-2 ${
+                          assignedToId === member.user.id
+                            ? "border-pink-500 bg-pink-500/10"
+                            : "border-[var(--card-border)] hover:border-[var(--muted)]"
+                        }`}
+                      >
+                        <span className="w-5 h-5 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-xs text-white font-bold">
+                          {(member.user.name || "?").charAt(0)}
+                        </span>
+                        {member.user.name}
+                      </button>
                     ))}
-                  </select>
+                  </div>
+                  {assignedToId && (
+                    <p className="text-xs text-pink-500 mt-2">
+                      💝 {otherMembers.find(m => m.user.id === assignedToId)?.user.name} будет в курсе этой цели
+                    </p>
+                  )}
                 </div>
               )}
 

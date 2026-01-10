@@ -163,12 +163,14 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
     resources: ResourceType[];
     ownerId: string;
     subtasks?: string[];
+    assignedToId?: string;
   }) => {
     await createGoal({
       ...data,
       deadline: data.deadline ? new Date(data.deadline) : undefined,
       familyId: family.id,
       subtasks: data.subtasks,
+      assignedToId: data.assignedToId,
     });
   };
 
@@ -463,6 +465,7 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
                               onProgressChange={(p) => handleProgressChange(goal.id, p)}
                               onClick={() => setViewingGoal(goal)}
                               isOwner={goal.ownerId === currentUserId}
+                              isAssignedToMe={goal.assignedToId === currentUserId}
                             />
                           ))}
                         </div>
@@ -489,6 +492,7 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
                                 onProgressChange={(p) => handleProgressChange(goal.id, p)}
                                 onClick={() => setViewingGoal(goal)}
                                 isOwner={goal.ownerId === currentUserId}
+                                isAssignedToMe={goal.assignedToId === currentUserId}
                               />
                             ))}
                           </div>

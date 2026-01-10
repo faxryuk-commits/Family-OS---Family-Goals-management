@@ -78,7 +78,8 @@ model User {
 
   // App Relations
   familyMemberships FamilyMember[]
-  goals             Goal[]
+  goals             Goal[]           @relation("OwnedGoals")
+  assignedGoals     Goal[]           @relation("AssignedGoals")
   checkIns          CheckIn[]
   achievements      UserAchievement[]
   comments          Comment[]
@@ -167,10 +168,14 @@ model Goal {
 
   // Ресурсы, которые потребляет цель (JSON)
   resources String? // ["MONEY", "TIME", "GEO", "ENERGY", "RISK"]
+  
+  // Отметить члена семьи (просьба/запрос)
+  assignedToId String?
+  assignedTo   User?   @relation("AssignedGoals", fields: [assignedToId], references: [id], onDelete: SetNull)
 
   // Relations
   ownerId  String
-  owner    User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner    User   @relation("OwnedGoals", fields: [ownerId], references: [id], onDelete: Cascade)
   familyId String
   family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
 

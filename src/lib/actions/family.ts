@@ -34,6 +34,13 @@ export async function getUserFamily(userId: string) {
           goals: {
             include: { 
               owner: true,
+              assignedTo: {
+                select: {
+                  id: true,
+                  name: true,
+                  image: true,
+                },
+              },
               subtasks: { orderBy: { order: "asc" } },
               comments: {
                 include: {
