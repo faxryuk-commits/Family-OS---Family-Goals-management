@@ -41,7 +41,8 @@ export function FamilySettings({
     setIsLeaving(true);
     try {
       await leaveFamily(family.id, currentUserId);
-      router.push("/onboarding");
+      router.push("/"); // Редирект на главную, где покажется NoFamilyView
+      router.refresh(); // Обновляем данные
     } catch (error) {
       console.error("Ошибка при выходе из семьи:", error);
       alert("Не удалось выйти из семьи. Попробуйте снова.");

@@ -9,7 +9,7 @@ export const REACTION_EMOJIS = ["👍", "❤️", "🎉", "🔥", "💪", "👀"
 export type ReactionEmoji = typeof REACTION_EMOJIS[number];
 
 // Типы объектов для реакций
-export type ReactionTarget = "goal" | "comment" | "checkIn";
+export type ReactionTarget = "GOAL" | "CHECK_IN";
 
 // Добавить/изменить реакцию
 export async function toggleReaction({
@@ -30,10 +30,7 @@ export async function toggleReaction({
     const userId = session.user.id;
 
     // Определяем поля для запроса в зависимости от типа
-    const targetField = 
-      targetType === "goal" ? "goalId" :
-      targetType === "comment" ? "commentId" :
-      "checkInId";
+    const targetField = targetType === "GOAL" ? "goalId" : "checkInId";
 
     // Ищем существующую реакцию
     const existingReaction = await db.reaction.findFirst({
@@ -86,10 +83,7 @@ export async function getReactions({
   targetType: ReactionTarget;
   targetId: string;
 }) {
-  const targetField = 
-    targetType === "goal" ? "goalId" :
-    targetType === "comment" ? "commentId" :
-    "checkInId";
+  const targetField = targetType === "GOAL" ? "goalId" : "checkInId";
 
   const reactions = await db.reaction.findMany({
     where: {
@@ -129,10 +123,7 @@ export async function getMyReaction({
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  const targetField = 
-    targetType === "goal" ? "goalId" :
-    targetType === "comment" ? "commentId" :
-    "checkInId";
+  const targetField = targetType === "GOAL" ? "goalId" : "checkInId";
 
   const reaction = await db.reaction.findFirst({
     where: {
