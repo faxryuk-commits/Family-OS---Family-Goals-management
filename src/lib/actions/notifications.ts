@@ -296,3 +296,110 @@ export async function notifyGoalCompleted({
     });
   }
 }
+
+// Когда кто-то сделал check-in
+export async function notifyCheckIn({
+  userId,
+  userName,
+  familyId,
+  wins,
+  blockers,
+  memberIds,
+}: {
+  userId: string;
+  userName: string;
+  familyId: string;
+  wins?: string;
+  blockers?: string;
+  memberIds: string[];
+}) {
+  // Формируем сообщение
+  let message = `${userName} отметился(-лась) на этой неделе`;
+  if (wins) {
+    message += ` 🏆 Победы: "${wins.substring(0, 40)}${wins.length > 40 ? '...' : ''}"`;
+  }
+  if (blockers) {
+    message += ` 🚧 Нужна помощь`;
+  }
+
+  // Уведомить всех членов семьи (кроме автора)
+  for (const memberId of memberIds) {
+    if (memberId !== userId) {
+      await createNotification({
+        userId: memberId,
+        type: "CHECK_IN",
+        title: "📋 Новый check-in",
+        message,
+        link: "/",
+        fromUserId: userId,
+        familyId,
+      });
+    }
+  }
+}
+
+// Когда подзадача выполнена (уведомление для семьи)
+export async function notifySubtaskCompleted({
+  goalId,
+  goalTitle,
+  subtaskTitle,
+  ownerId,
+  ownerName,
+  familyId,
+  assignedToId, // Если цель назначена кому-то
+}: {
+  goalId: string;
+  goalTitle: string;
+  subtaskTitle: string;
+  ownerId: string;
+  ownerName: string;
+  familyId: string;
+  assignedToId?: string;
+}) {
+  // Если цель назначена кому-то, уведомить этого человека
+  if (assignedToId && assignedToId !== ownerId) {
+    await createNotification({
+      userId: assignedToId,
+      type: "GOAL_ASSIGNED",
+      title: "✅ Прогресс по цели",
+      message: `${ownerName} выполнил(а) этап "${subtaskTitle}" в цели "${goalTitle}"`,
+      link: `/?goalId=${goalId}`,
+      fromUserId: ownerId,
+      goalId,
+      familyId,
+    });
+  }
+}
+
+// Когда добавлено фото к цели
+export async function notifyPhotoAdded({
+  goalId,
+  goalTitle,
+  ownerId,
+  ownerName,
+  familyId,
+  memberIds,
+}: {
+  goalId: string;
+  goalTitle: string;
+  ownerId: string;
+  ownerName: string;
+  familyId: string;
+  memberIds: string[];
+}) {
+  // Уведомить всех членов семьи (кроме автора)
+  for (const memberId of memberIds) {
+    if (memberId !== ownerId) {
+      await createNotification({
+        userId: memberId,
+        type: "GOAL_ASSIGNED", // Используем существующий тип
+        title: "📷 Новое фото",
+        message: `${ownerName} добавил(а) фото к цели "${goalTitle}"`,
+        link: `/?goalId=${goalId}`,
+        fromUserId: ownerId,
+        goalId,
+        familyId,
+      });
+    }
+  }
+}

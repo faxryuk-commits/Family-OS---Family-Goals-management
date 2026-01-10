@@ -10,7 +10,7 @@ type AssignedUser = {
 };
 
 type GoalCardProps = {
-  goal: Goal & { owner: User; assignedTo?: AssignedUser | null; _count?: { comments: number } };
+  goal: Goal & { owner: User; assignedTo?: AssignedUser | null; _count?: { comments: number }; images?: string | null };
   hasConflict?: boolean;
   onProgressChange?: (progress: number) => void;
   onStatusChange?: (status: string) => void;
@@ -28,13 +28,14 @@ export function GoalCard({
   isAssignedToMe = false,
 }: GoalCardProps) {
   const resources = JSON.parse(goal.resources || "[]") as ResourceType[];
+  const images = goal.images ? JSON.parse(goal.images) as string[] : [];
   const horizon = HORIZONS[goal.horizon as HorizonType] || HORIZONS.MID;
   const status = STATUSES[goal.status as StatusType] || STATUSES.DRAFT;
   const commentCount = goal._count?.comments || 0;
 
   return (
     <div 
-      className={`card animate-fade-in group card-hover cursor-pointer ${
+      className={`card animate-fade-in group card-hover cursor-pointer relative overflow-hidden ${
         hasConflict ? "conflict-indicator border-red-500/50" : ""
       } ${goal.status === "BLOCKED" ? "opacity-70" : ""} ${
         isAssignedToMe ? "ring-2 ring-pink-400/50 bg-pink-50/30" : ""
@@ -84,6 +85,25 @@ export function GoalCard({
           </div>
         </div>
       </div>
+
+      {/* Image Preview */}
+      {images.length > 0 && (
+        <div className="mb-3 -mx-4 -mt-2">
+          <img
+            src={images[0]}
+            alt={goal.title}
+            className="w-full h-32 object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+          {images.length > 1 && (
+            <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+              +{images.length - 1} 📷
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Description */}
       {goal.description && (

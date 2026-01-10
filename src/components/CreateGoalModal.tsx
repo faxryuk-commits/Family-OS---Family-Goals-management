@@ -23,6 +23,7 @@ type CreateGoalModalProps = {
     ownerId: string;
     subtasks?: string[];
     assignedToId?: string;
+    images?: string[];
   }) => void;
   members: { user: UserBasic }[];
   currentUserId: string;
@@ -79,6 +80,8 @@ export function CreateGoalModal({
   const [subtasks, setSubtasks] = useState<string[]>([]);
   const [newSubtask, setNewSubtask] = useState("");
   const [assignedToId, setAssignedToId] = useState<string | undefined>(undefined);
+  const [images, setImages] = useState<string[]>([]);
+  const [newImageUrl, setNewImageUrl] = useState("");
 
   if (!isOpen) return null;
 
@@ -101,6 +104,26 @@ export function CreateGoalModal({
     setSubtasks(subtasks.filter((_, i) => i !== index));
   };
 
+  const addImage = () => {
+    if (newImageUrl.trim() && isValidUrl(newImageUrl)) {
+      setImages([...images, newImageUrl.trim()]);
+      setNewImageUrl("");
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImages(images.filter((_, i) => i !== index));
+  };
+
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return url.match(/\.(jpg|jpeg|png|gif|webp)$/i) || url.includes("imgur") || url.includes("unsplash") || url.includes("cloudinary");
+    } catch {
+      return false;
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
@@ -116,6 +139,7 @@ export function CreateGoalModal({
       ownerId,
       subtasks: subtasks.length > 0 ? subtasks : undefined,
       assignedToId: assignedToId || undefined,
+      images: images.length > 0 ? images : undefined,
     });
 
     // Reset form
@@ -129,6 +153,8 @@ export function CreateGoalModal({
     setMetric("");
     setResources([]);
     setAssignedToId(undefined);
+    setImages([]);
+    setNewImageUrl("");
     setStep(1);
     onClose();
   };
@@ -454,6 +480,70 @@ export function CreateGoalModal({
                 </div>
                 <p className="text-xs text-[var(--muted)] mt-1">
                   Нажмите Enter или + чтобы добавить. Можно добавить позже в редактировании.
+                </p>
+              </div>
+
+              {/* Photos */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="text-sm font-medium">📷 Фото мечты</label>
+                  <HelpIcon text="Добавьте картинку, которая олицетворяет вашу цель. Визуализация помогает достигать целей быстрее!" />
+                </div>
+                
+                {/* Existing images */}
+                {images.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {images.map((image, index) => (
+                      <div
+                        key={index}
+                        className="relative group"
+                      >
+                        <img
+                          src={image}
+                          alt={`Goal image ${index + 1}`}
+                          className="w-20 h-20 object-cover rounded-lg border border-[var(--border)]"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "https://via.placeholder.com/80?text=Error";
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add new image */}
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={newImageUrl}
+                    onChange={(e) => setNewImageUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addImage();
+                      }
+                    }}
+                    className="input flex-1"
+                    placeholder="Вставьте ссылку на изображение..."
+                  />
+                  <button
+                    type="button"
+                    onClick={addImage}
+                    disabled={!newImageUrl.trim() || !isValidUrl(newImageUrl)}
+                    className="btn btn-secondary"
+                  >
+                    📷
+                  </button>
+                </div>
+                <p className="text-xs text-[var(--muted)] mt-1">
+                  Используйте imgur.com, unsplash.com или любой другой хостинг изображений
                 </p>
               </div>
 

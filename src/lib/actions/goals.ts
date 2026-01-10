@@ -32,6 +32,7 @@ export type CreateGoalInput = {
   familyId: string;
   subtasks?: string[]; // Названия подзадач
   assignedToId?: string; // Отметить члена семьи
+  images?: string[]; // URL фотографий
 };
 
 export async function createGoal(input: CreateGoalInput) {
@@ -44,6 +45,7 @@ export async function createGoal(input: CreateGoalInput) {
       deadline: input.deadline,
       metric: input.metric,
       resources: JSON.stringify(input.resources),
+      images: input.images?.length ? JSON.stringify(input.images) : null,
       ownerId: input.ownerId,
       familyId: input.familyId,
       assignedToId: input.assignedToId,
@@ -137,6 +139,7 @@ export type UpdateGoalInput = {
   metric?: string;
   resources?: string[];
   status?: string;
+  images?: string[]; // URL фотографий
 };
 
 export async function updateGoal(goalId: string, input: UpdateGoalInput) {
@@ -157,6 +160,7 @@ export async function updateGoal(goalId: string, input: UpdateGoalInput) {
       ...(input.metric !== undefined && { metric: input.metric }),
       ...(input.resources && { resources: JSON.stringify(input.resources) }),
       ...(input.status && { status: input.status }),
+      ...(input.images !== undefined && { images: input.images.length ? JSON.stringify(input.images) : null }),
     },
     include: { owner: true },
   });

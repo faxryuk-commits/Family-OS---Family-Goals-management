@@ -173,6 +173,9 @@ model Goal {
   // Ресурсы, которые потребляет цель (JSON)
   resources String? // ["MONEY", "TIME", "GEO", "ENERGY", "RISK"]
   
+  // Фотографии цели (JSON массив URL)
+  images    String?   // ["url1", "url2", ...]
+  
   // Отметить члена семьи (просьба/запрос)
   assignedToId String?
   assignedTo   User?   @relation("AssignedGoals", fields: [assignedToId], references: [id], onDelete: SetNull)

@@ -170,6 +170,7 @@ export function FamilyBoard({ family, currentUserId, notifications = [], unreadN
     ownerId: string;
     subtasks?: string[];
     assignedToId?: string;
+    images?: string[];
   }) => {
     await createGoal({
       ...data,
@@ -177,6 +178,7 @@ export function FamilyBoard({ family, currentUserId, notifications = [], unreadN
       familyId: family.id,
       subtasks: data.subtasks,
       assignedToId: data.assignedToId,
+      images: data.images,
     });
   };
 
@@ -297,6 +299,7 @@ export function FamilyBoard({ family, currentUserId, notifications = [], unreadN
             <div className="card p-4">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
                 <span>👨‍👩‍👧</span> Семья
+                <HelpIcon text="Члены вашей семьи. Пригласите партнёра через Настройки → Пригласить." />
               </h3>
               <div className="space-y-3">
                 {family.members.map(member => (
@@ -326,6 +329,7 @@ export function FamilyBoard({ family, currentUserId, notifications = [], unreadN
               <div className="card p-4 border-red-500/30">
                 <h3 className="font-semibold mb-3 text-red-400 flex items-center gap-2">
                   <span>⚠️</span> Конфликты
+                  <HelpIcon text="Две цели требуют одинаковых ресурсов! Обсудите вместе и найдите компромисс. Нажмите на конфликт чтобы решить." />
                 </h3>
                 {family.conflicts.map(conflict => (
                   <div 

@@ -29,6 +29,7 @@ type GoalWithDetails = Goal & {
   subtasks: Subtask[];
   comments: CommentWithAuthor[];
   _count: { comments: number };
+  images?: string | null;
 };
 
 type GoalDetailsModalProps = {
@@ -75,9 +76,11 @@ export function GoalDetailsModal({
 
   const isOwner = goal.ownerId === currentUserId;
   const resources = JSON.parse(goal.resources || "[]") as ResourceType[];
+  const images = goal.images ? JSON.parse(goal.images) as string[] : [];
   const horizon = HORIZONS[goal.horizon as HorizonType] || HORIZONS.MID;
   const status = STATUSES[goal.status as StatusType] || STATUSES.DRAFT;
   const completedSubtasks = goal.subtasks.filter(s => s.completed).length;
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (isOpen && showAllComments) {
@@ -172,6 +175,29 @@ export function GoalDetailsModal({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {/* Images Gallery */}
+          {images.length > 0 && (
+            <div>
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {images.map((img, index) => (
+                  <img
+                    key={index}
+                    src={img}
+                    alt={`${goal.title} - фото ${index + 1}`}
+                    className="w-24 h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0 border border-[var(--border)]"
+                    onClick={() => setSelectedImageIndex(index)}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                ))}
+              </div>
+              {images.length > 0 && (
+                <p className="text-xs text-[var(--muted)] mt-1">📷 {images.length} фото • нажмите для просмотра</p>
+              )}
+            </div>
+          )}
+
           {/* Description */}
           {goal.description && (
             <div>
@@ -311,6 +337,52 @@ export function GoalDetailsModal({
           </div>
         </div>
       </div>
+
+      {/* Image Lightbox */}
+      {selectedImageIndex !== null && images.length > 0 && (
+        <div 
+          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center"
+          onClick={() => setSelectedImageIndex(null)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white text-2xl p-2 hover:bg-white/10 rounded-full"
+            onClick={() => setSelectedImageIndex(null)}
+          >
+            ✕
+          </button>
+          {selectedImageIndex > 0 && (
+            <button
+              className="absolute left-4 text-white text-4xl p-2 hover:bg-white/10 rounded-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedImageIndex(selectedImageIndex - 1);
+              }}
+            >
+              ‹
+            </button>
+          )}
+          <img
+            src={images[selectedImageIndex]}
+            alt={`${goal.title} - фото ${selectedImageIndex + 1}`}
+            className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+          {selectedImageIndex < images.length - 1 && (
+            <button
+              className="absolute right-4 text-white text-4xl p-2 hover:bg-white/10 rounded-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedImageIndex(selectedImageIndex + 1);
+              }}
+            >
+              ›
+            </button>
+          )}
+          <div className="absolute bottom-4 text-white text-sm">
+            {selectedImageIndex + 1} / {images.length}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

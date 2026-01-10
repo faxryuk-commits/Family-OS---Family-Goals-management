@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Goal, Subtask } from "@prisma/client";
 import { getCurrentWeek } from "@/lib/utils";
+import { HelpIcon } from "./Tooltip";
 
 type UserBasic = {
   id: string;
@@ -135,7 +136,10 @@ export function CheckInModal({
           {step === 1 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium">🎯 Прогресс по целям</h3>
+                <h3 className="font-medium flex items-center gap-2">
+                  🎯 Прогресс по целям
+                  <HelpIcon text="Отметьте этапы, которые выполнили за эту неделю. Прогресс цели пересчитается автоматически!" />
+                </h3>
                 {newCompletedCount > 0 && (
                   <span className="badge bg-green-500/20 text-green-400">
                     +{newCompletedCount} выполнено
@@ -278,8 +282,9 @@ export function CheckInModal({
             <div className="space-y-4">
               {/* What did you do? */}
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                   <span className="text-green-400">✓</span> Что ещё удалось сделать?
+                  <HelpIcon text="Опишите любые достижения за неделю, даже если они не связаны с целями." />
                 </label>
                 <textarea
                   value={notes}
@@ -291,8 +296,9 @@ export function CheckInModal({
 
               {/* Wins */}
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                   <span className="text-yellow-400">🏆</span> Чем гордитесь?
+                  <HelpIcon text="Победы мотивируют! Даже маленькие успехи важны. Семья увидит это в ленте." />
                 </label>
                 <textarea
                   value={wins}
@@ -304,8 +310,9 @@ export function CheckInModal({
 
               {/* Blockers */}
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                   <span className="text-red-400">🚧</span> Где нужна помощь?
+                  <HelpIcon text="Если что-то мешает — напишите. Возможно, партнёр сможет помочь!" />
                 </label>
                 <textarea
                   value={blockers}

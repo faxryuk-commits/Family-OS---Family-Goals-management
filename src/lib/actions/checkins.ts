@@ -6,6 +6,7 @@ import { getCurrentWeek } from "@/lib/utils";
 import { recalculateGoalProgress } from "./subtasks";
 import { auth } from "@/auth";
 import { updateStreak, addUserXp, recordSubtaskCompletion, checkAchievements } from "./gamification";
+import { notifyCheckIn } from "./notifications";
 
 export { getCurrentWeek };
 
@@ -113,6 +114,24 @@ export async function createCheckIn(input: CreateCheckInInput) {
     // Новый check-in — обновляем стрик и даём XP
     await updateStreak(input.userId);
     await addUserXp(input.userId, 15, "Еженедельный check-in");
+
+    // 🔔 NOTIFICATION: Уведомляем семью о check-in
+    const user = await db.user.findUnique({ 
+      where: { id: input.userId },
+      select: { name: true },
+    });
+    const familyMembers = await db.familyMember.findMany({
+      where: { familyId: input.familyId },
+      select: { userId: true },
+    });
+    await notifyCheckIn({
+      userId: input.userId,
+      userName: user?.name || "Кто-то",
+      familyId: input.familyId,
+      wins: input.wins,
+      blockers: input.blockers,
+      memberIds: familyMembers.map(m => m.userId),
+    });
   }
 
   // XP за каждую выполненную подзадачу

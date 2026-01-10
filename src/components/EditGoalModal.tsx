@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Goal, Subtask } from "@prisma/client";
 import { ResourceType } from "@/lib/types";
+import { HelpIcon } from "./Tooltip";
 
 type UserBasic = {
   id: string;
@@ -154,7 +155,10 @@ export function EditGoalModal({
 
           {/* Type */}
           <div>
-            <label className="block text-sm font-medium mb-2">Тип цели</label>
+            <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+              Тип цели
+              <HelpIcon text="Личная цель — только ваша. Семейная — работаете над ней вместе." />
+            </label>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -183,7 +187,10 @@ export function EditGoalModal({
 
           {/* Horizon */}
           <div>
-            <label className="block text-sm font-medium mb-2">Горизонт</label>
+            <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+              Горизонт
+              <HelpIcon text="Примерный срок достижения. Помогает планировать и расставлять приоритеты." />
+            </label>
             <div className="flex gap-2">
               {horizonOptions.map((option) => (
                 <button
@@ -204,8 +211,9 @@ export function EditGoalModal({
 
           {/* Resources */}
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="block text-sm font-medium mb-2 flex items-center gap-2">
               Какие ресурсы потребуются?
+              <HelpIcon text="Если две цели требуют одинаковых ресурсов — система обнаружит конфликт и предложит обсудить." />
             </label>
             <div className="flex flex-wrap gap-2">
               {resourceOptions.map((option) => (
@@ -241,8 +249,9 @@ export function EditGoalModal({
 
           {/* Metric */}
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="block text-sm font-medium mb-2 flex items-center gap-2">
               Как поймёте, что достигли?
+              <HelpIcon text="Конкретный критерий успеха. Например: 'Билеты куплены' или 'На счёте $5000'." />
             </label>
             <input
               type="text"
