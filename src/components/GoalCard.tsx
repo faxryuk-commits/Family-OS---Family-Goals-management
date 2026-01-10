@@ -4,7 +4,7 @@ import { Goal, User } from "@prisma/client";
 import { RESOURCES, HORIZONS, STATUSES, ResourceType, HorizonType, StatusType } from "@/lib/types";
 
 type GoalCardProps = {
-  goal: Goal & { owner: User };
+  goal: Goal & { owner: User; _count?: { comments: number } };
   hasConflict?: boolean;
   onProgressChange?: (progress: number) => void;
   onStatusChange?: (status: string) => void;
@@ -22,14 +22,14 @@ export function GoalCard({
   const resources = JSON.parse(goal.resources || "[]") as ResourceType[];
   const horizon = HORIZONS[goal.horizon as HorizonType] || HORIZONS.MID;
   const status = STATUSES[goal.status as StatusType] || STATUSES.DRAFT;
+  const commentCount = goal._count?.comments || 0;
 
   return (
     <div 
-      className={`card animate-fade-in group ${
-        isOwner ? "card-hover cursor-pointer" : ""
-      } ${hasConflict ? "conflict-indicator border-red-500/50" : ""
+      className={`card animate-fade-in group card-hover cursor-pointer ${
+        hasConflict ? "conflict-indicator border-red-500/50" : ""
       } ${goal.status === "BLOCKED" ? "opacity-70" : ""}`}
-      onClick={isOwner ? onClick : undefined}
+      onClick={onClick}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
@@ -131,19 +131,31 @@ export function GoalCard({
         )}
       </div>
 
-      {/* Deadline */}
-      {goal.deadline && (
-        <div className="flex items-center gap-2 text-sm text-[var(--muted)] mt-3 pt-3 border-t border-[var(--card-border)]">
-          <span>📅</span>
-          <span>
-            {new Date(goal.deadline).toLocaleDateString("ru-RU", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          </span>
+      {/* Footer: Deadline + Comments */}
+      <div className="flex items-center justify-between text-sm text-[var(--muted)] mt-3 pt-3 border-t border-[var(--card-border)]">
+        <div className="flex items-center gap-3">
+          {goal.deadline && (
+            <div className="flex items-center gap-1">
+              <span>📅</span>
+              <span>
+                {new Date(goal.deadline).toLocaleDateString("ru-RU", {
+                  day: "numeric",
+                  month: "short",
+                })}
+              </span>
+            </div>
+          )}
+          {commentCount > 0 && (
+            <div className="flex items-center gap-1">
+              <span>💬</span>
+              <span>{commentCount}</span>
+            </div>
+          )}
         </div>
-      )}
+        <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+          Подробнее →
+        </span>
+      </div>
     </div>
   );
 }

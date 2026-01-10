@@ -35,6 +35,23 @@ export async function getUserFamily(userId: string) {
             include: { 
               owner: true,
               subtasks: { orderBy: { order: "asc" } },
+              comments: {
+                include: {
+                  author: {
+                    select: {
+                      id: true,
+                      name: true,
+                      image: true,
+                      level: true,
+                    },
+                  },
+                },
+                orderBy: { createdAt: "desc" },
+                take: 3, // Показываем последние 3 комментария
+              },
+              _count: {
+                select: { comments: true },
+              },
             },
             orderBy: { createdAt: "desc" },
           },

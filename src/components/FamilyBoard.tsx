@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Family, FamilyMember, Goal, User, Conflict, CheckIn, Agreement, Subtask } from "@prisma/client";
+import { Family, FamilyMember, Goal, User, Conflict, CheckIn, Agreement, Subtask, Comment } from "@prisma/client";
 import { Header } from "./Header";
 import { GoalCard } from "./GoalCard";
 import { ConflictAlert } from "./ConflictAlert";
 import { CreateGoalModal } from "./CreateGoalModal";
 import { ResolveConflictModal } from "./ResolveConflictModal";
 import { CheckInModal } from "./CheckInModal";
+import { GoalDetailsModal } from "./GoalDetailsModal";
 import { Onboarding, useOnboarding } from "./Onboarding";
 import { HelpIcon } from "./Tooltip";
 import { createGoal } from "@/lib/actions/goals";
@@ -21,9 +22,22 @@ import { EditGoalModal } from "./EditGoalModal";
 import { updateGoal, deleteGoal } from "@/lib/actions/goals";
 import Link from "next/link";
 
+type Author = {
+  id: string;
+  name: string | null;
+  image: string | null;
+  level: number;
+};
+
+type CommentWithAuthor = Comment & {
+  author: Author;
+};
+
 type GoalWithSubtasks = Goal & { 
   owner: User;
   subtasks: Subtask[];
+  comments: CommentWithAuthor[];
+  _count: { comments: number };
 };
 
 type ExtendedUser = {
@@ -84,7 +98,8 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false);
   const [selectedConflict, setSelectedConflict] = useState<(typeof family.conflicts)[0] | null>(null);
-  const [selectedGoal, setSelectedGoal] = useState<(typeof family.goals)[0] | null>(null);
+  const [viewingGoal, setViewingGoal] = useState<(typeof family.goals)[0] | null>(null);
+  const [editingGoal, setEditingGoal] = useState<(typeof family.goals)[0] | null>(null);
   const [activeTab, setActiveTab] = useState<"feed" | "goals" | "family">("feed");
 
   const { needsOnboarding, completeOnboarding } = useOnboarding(currentUserId);
@@ -214,18 +229,19 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
     status: string;
     subtasks?: { id?: string; title: string; completed?: boolean }[];
   }) => {
-    if (!selectedGoal) return;
-    await updateGoal(selectedGoal.id, {
+    if (!editingGoal) return;
+    await updateGoal(editingGoal.id, {
       ...data,
       deadline: data.deadline ? new Date(data.deadline) : null,
     });
-    setSelectedGoal(null);
+    setViewingGoal(null);
   };
 
   const handleDeleteGoal = async () => {
-    if (!selectedGoal) return;
-    await deleteGoal(selectedGoal.id);
-    setSelectedGoal(null);
+    if (!editingGoal) return;
+    await deleteGoal(editingGoal.id);
+    setEditingGoal(null);
+    setViewingGoal(null);
   };
 
   return (
@@ -398,7 +414,7 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
                       {(item.type === "goal_completed" || item.type === "goal_created") && (
                         <div 
                           className="p-3 bg-[var(--background)] rounded-lg cursor-pointer hover:bg-white/5 transition-colors"
-                          onClick={() => item.data.ownerId === currentUserId && setSelectedGoal(item.data as GoalWithSubtasks)}
+                          onClick={() => item.data.ownerId === currentUserId && setViewingGoal(item.data as GoalWithSubtasks)}
                         >
                           <div className="font-medium">{(item.data as Goal).title}</div>
                           {(item.data as Goal).description && (
@@ -445,7 +461,7 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
                               goal={goal}
                               hasConflict={conflictGoalIds.has(goal.id)}
                               onProgressChange={(p) => handleProgressChange(goal.id, p)}
-                              onClick={() => setSelectedGoal(goal)}
+                              onClick={() => setViewingGoal(goal)}
                               isOwner={goal.ownerId === currentUserId}
                             />
                           ))}
@@ -471,7 +487,7 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
                                 goal={goal}
                                 hasConflict={conflictGoalIds.has(goal.id)}
                                 onProgressChange={(p) => handleProgressChange(goal.id, p)}
-                                onClick={() => setSelectedGoal(goal)}
+                                onClick={() => setViewingGoal(goal)}
                                 isOwner={goal.ownerId === currentUserId}
                               />
                             ))}
@@ -562,7 +578,7 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
                     <div 
                       key={goal.id} 
                       className="cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors"
-                      onClick={() => setSelectedGoal(goal)}
+                      onClick={() => setViewingGoal(goal)}
                     >
                       <div className="flex justify-between text-sm mb-1">
                         <span className="truncate">{goal.title}</span>
@@ -649,11 +665,26 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
         />
       )}
 
-      {selectedGoal && (
+      {/* Goal Details Modal (with comments) */}
+      {viewingGoal && (
+        <GoalDetailsModal
+          isOpen={!!viewingGoal}
+          onClose={() => setViewingGoal(null)}
+          goal={viewingGoal}
+          currentUserId={currentUserId}
+          onEdit={viewingGoal.ownerId === currentUserId ? () => {
+            setEditingGoal(viewingGoal);
+            setViewingGoal(null);
+          } : undefined}
+        />
+      )}
+
+      {/* Edit Goal Modal */}
+      {editingGoal && (
         <EditGoalModal
-          isOpen={!!selectedGoal}
-          onClose={() => setSelectedGoal(null)}
-          goal={selectedGoal}
+          isOpen={!!editingGoal}
+          onClose={() => setEditingGoal(null)}
+          goal={editingGoal}
           onUpdate={handleUpdateGoal}
           onDelete={handleDeleteGoal}
         />
