@@ -282,6 +282,86 @@ export async function updateNorthStar(familyId: string, northStar: string) {
   return family;
 }
 
+// Выйти из семьи
+export async function leaveFamily(familyId: string, userId: string) {
+  // Проверяем членство
+  const membership = await db.familyMember.findFirst({
+    where: { familyId, userId },
+  });
+
+  if (!membership) {
+    throw new Error("Вы не являетесь членом этой семьи");
+  }
+
+  // Проверяем количество членов семьи
+  const membersCount = await db.familyMember.count({
+    where: { familyId },
+  });
+
+  if (membersCount === 1) {
+    // Если последний член — удаляем семью целиком
+    // Сначала удаляем все связанные данные
+    await db.$transaction([
+      // Удаляем check-ins
+      db.checkIn.deleteMany({ where: { familyId } }),
+      // Удаляем цели (каскадно удалит subtasks, comments, conflicts, checkInProgress)
+      db.goal.deleteMany({ where: { familyId } }),
+      // Удаляем соглашения
+      db.agreement.deleteMany({ where: { familyId } }),
+      // Удаляем приглашения
+      db.invite.deleteMany({ where: { familyId } }),
+      // Удаляем членство
+      db.familyMember.delete({ where: { id: membership.id } }),
+      // Удаляем семью
+      db.family.delete({ where: { id: familyId } }),
+    ]);
+  } else {
+    // Переносим цели пользователя другому члену семьи или удаляем их
+    // Удаляем личные цели пользователя
+    await db.goal.deleteMany({
+      where: {
+        familyId,
+        ownerId: userId,
+        type: "PERSONAL",
+      },
+    });
+
+    // Семейные цели передаём другому члену
+    const otherMember = await db.familyMember.findFirst({
+      where: {
+        familyId,
+        userId: { not: userId },
+      },
+    });
+
+    if (otherMember) {
+      await db.goal.updateMany({
+        where: {
+          familyId,
+          ownerId: userId,
+          type: "FAMILY",
+        },
+        data: {
+          ownerId: otherMember.userId,
+        },
+      });
+    }
+
+    // Удаляем check-ins пользователя
+    await db.checkIn.deleteMany({
+      where: { familyId, userId },
+    });
+
+    // Удаляем членство
+    await db.familyMember.delete({
+      where: { id: membership.id },
+    });
+  }
+
+  revalidatePath("/");
+  return { success: true };
+}
+
 // Для демо (если нужно)
 export async function createDemoFamily() {
   const existingFamily = await db.family.findFirst({

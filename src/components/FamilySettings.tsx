@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Family, FamilyMember, Invite } from "@prisma/client";
-import { createInvite, updateNorthStar } from "@/lib/actions/family";
+import { createInvite, updateNorthStar, leaveFamily } from "@/lib/actions/family";
+import { useRouter } from "next/navigation";
 
 type UserBasic = {
   id: string;
@@ -27,11 +28,28 @@ export function FamilySettings({
   invites,
   currentUserId,
 }: FamilySettingsProps) {
+  const router = useRouter();
   const [newInviteCode, setNewInviteCode] = useState<string | null>(null);
   const [isCreatingInvite, setIsCreatingInvite] = useState(false);
   const [northStar, setNorthStar] = useState(family.northStar || "");
   const [isEditingNorthStar, setIsEditingNorthStar] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
+
+  const handleLeaveFamily = async () => {
+    setIsLeaving(true);
+    try {
+      await leaveFamily(family.id, currentUserId);
+      router.push("/onboarding");
+    } catch (error) {
+      console.error("Ошибка при выходе из семьи:", error);
+      alert("Не удалось выйти из семьи. Попробуйте снова.");
+    } finally {
+      setIsLeaving(false);
+      setShowLeaveConfirm(false);
+    }
+  };
 
   const handleCreateInvite = async () => {
     setIsCreatingInvite(true);
@@ -239,10 +257,63 @@ export function FamilySettings({
         <p className="text-sm text-[var(--muted)] mb-4">
           Эти действия нельзя отменить
         </p>
-        <button className="btn btn-secondary text-red-400 hover:bg-red-500/20">
+        <button 
+          onClick={() => setShowLeaveConfirm(true)}
+          className="btn btn-secondary text-red-400 hover:bg-red-500/20"
+        >
           Выйти из семьи
         </button>
       </section>
+
+      {/* Leave Family Confirmation Modal */}
+      {showLeaveConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setShowLeaveConfirm(false)}
+          />
+          <div className="relative w-full max-w-md card animate-fade-in p-6">
+            <div className="text-center mb-6">
+              <div className="text-5xl mb-4">😢</div>
+              <h3 className="text-xl font-bold mb-2">Вы уверены?</h3>
+              <p className="text-[var(--muted)]">
+                Вы собираетесь покинуть семью <strong>{family.name}</strong>.
+              </p>
+            </div>
+
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
+              <p className="text-sm text-red-400">
+                <strong>⚠️ Внимание:</strong>
+              </p>
+              <ul className="text-sm text-red-300 mt-2 space-y-1">
+                <li>• Ваши личные цели будут удалены</li>
+                <li>• Семейные цели будут переданы другому члену</li>
+                <li>• Ваши check-in&apos;ы будут удалены</li>
+                {family.members.length === 1 && (
+                  <li>• <strong>Вы последний член — семья будет удалена!</strong></li>
+                )}
+              </ul>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLeaveConfirm(false)}
+                className="btn btn-secondary flex-1"
+                disabled={isLeaving}
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleLeaveFamily}
+                disabled={isLeaving}
+                className="btn bg-red-500 hover:bg-red-600 text-white flex-1"
+              >
+                {isLeaving ? "Выходим..." : "Да, выйти"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
