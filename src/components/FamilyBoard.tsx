@@ -437,7 +437,7 @@ export function FamilyBoard({ family, currentUserId, notifications = [], unreadN
                           {/* Reactions for check-in */}
                           <div className="pt-2 border-t border-gray-100">
                             <Reactions
-                              targetType="checkIn"
+                              targetType="CHECK_IN"
                               targetId={item.id}
                               reactions={(() => {
                                 const checkInReactions = (item.data as CheckInWithReactions).reactions;

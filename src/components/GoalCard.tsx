@@ -204,7 +204,7 @@ export function GoalCard({
       {currentUserId && (
         <div className="mt-3 pt-3 border-t border-[var(--card-border)]" onClick={(e) => e.stopPropagation()}>
           <Reactions
-            targetType="goal"
+            targetType="GOAL"
             targetId={goal.id}
             reactions={groupedReactions}
             currentUserId={currentUserId}
