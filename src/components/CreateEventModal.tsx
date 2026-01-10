@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createEvent, EVENT_TYPES, RECURRING_TYPES, EventType, RecurringType } from "@/lib/actions/events";
+import { createEvent } from "@/lib/actions/events";
+import { EVENT_TYPES, RECURRING_TYPES, EventType, RecurringType } from "@/lib/event-types";
 
 type FamilyMember = {
   id: string;

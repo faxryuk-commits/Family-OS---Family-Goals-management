@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { Event } from "@prisma/client";
-import { deleteEvent, updateEvent, EVENT_TYPES, RECURRING_TYPES, EventType, RecurringType } from "@/lib/actions/events";
+import { deleteEvent, updateEvent } from "@/lib/actions/events";
+import { EVENT_TYPES, RECURRING_TYPES, EventType, RecurringType } from "@/lib/event-types";
 
 type EventWithRelations = Event & {
   creator: { id: string; name: string | null; image: string | null };
