@@ -247,7 +247,7 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
   };
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-[var(--background)] pb-20 lg:pb-6">
+    <div className="min-h-screen min-h-[100dvh] bg-[var(--background)] pb-24 lg:pb-6">
       {needsOnboarding && <Onboarding onComplete={completeOnboarding} familyName={family.name} />}
 
       <Header
@@ -260,10 +260,10 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
         familyXp={family.xp}
       />
 
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Sidebar */}
-          <aside className="lg:col-span-3 space-y-4">
+      <div className="max-w-6xl mx-auto px-4 py-4 lg:py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+          {/* Left Sidebar - Hidden on mobile */}
+          <aside className="hidden lg:block lg:col-span-3 space-y-4">
             {/* Quick Actions */}
             <div className="card p-4 space-y-2">
               <button
@@ -334,8 +334,8 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
             )}
           </aside>
 
-          {/* Main Content */}
-          <main className="lg:col-span-6 space-y-4">
+          {/* Main Content - Full width on mobile */}
+          <main className="col-span-1 lg:col-span-6 space-y-4">
             {/* Tabs */}
             <div className="flex gap-1 p-1 bg-[var(--card)] rounded-xl border border-[var(--border)]">
               {[
@@ -571,8 +571,8 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
             )}
           </main>
 
-          {/* Right Sidebar */}
-          <aside className="lg:col-span-3 space-y-4">
+          {/* Right Sidebar - Hidden on mobile */}
+          <aside className="hidden lg:block lg:col-span-3 space-y-4">
             {/* My Progress */}
             {currentUser && (
               <div className="card p-4">
@@ -632,13 +632,35 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
         </div>
       </div>
 
-      {/* FAB */}
-      <button
-        onClick={() => setIsCreateModalOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-2xl shadow-lg shadow-purple-500/30 hover:scale-110 transition-transform lg:hidden"
-      >
-        +
-      </button>
+      {/* Mobile Bottom Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-[var(--card)]/95 backdrop-blur-lg border-t border-[var(--border)] p-3 pb-safe flex items-center justify-around lg:hidden z-40">
+        <button
+          onClick={() => setIsCheckInModalOpen(true)}
+          className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl ${
+            currentUserCheckedIn ? "text-green-500" : "text-[var(--muted)]"
+          }`}
+        >
+          <span className="text-xl">{currentUserCheckedIn ? "✅" : "📋"}</span>
+          <span className="text-xs">Check-in</span>
+        </button>
+        
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="w-14 h-14 -mt-6 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-2xl shadow-lg shadow-purple-500/30"
+        >
+          +
+        </button>
+        
+        <button
+          onClick={() => setActiveTab("family")}
+          className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl ${
+            activeTab === "family" ? "text-indigo-500" : "text-[var(--muted)]"
+          }`}
+        >
+          <span className="text-xl">👨‍👩‍👧</span>
+          <span className="text-xs">Семья</span>
+        </button>
+      </div>
 
       {/* Modals */}
       <CreateGoalModal
