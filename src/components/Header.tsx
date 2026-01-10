@@ -115,10 +115,13 @@ export function Header({
 
             {/* Nav Links */}
             <nav className="hidden md:flex items-center gap-1">
-              <Link href="/agreements" className="p-2 text-[var(--muted)] hover:text-white hover:bg-white/5 rounded-lg transition-all" title="Договоры">
+              <Link href="/calendar" className="p-2 text-[var(--muted)] hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="Календарь">
+                📅
+              </Link>
+              <Link href="/agreements" className="p-2 text-[var(--muted)] hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="Договоры">
                 📜
               </Link>
-              <Link href="/settings" className="p-2 text-[var(--muted)] hover:text-white hover:bg-white/5 rounded-lg transition-all" title="Настройки">
+              <Link href="/settings" className="p-2 text-[var(--muted)] hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="Настройки">
                 ⚙️
               </Link>
             </nav>
@@ -228,8 +231,16 @@ export function Header({
                           <span>Мой профиль</span>
                         </Link>
                         <Link 
+                          href="/calendar" 
+                          className="flex items-center gap-3 px-3 py-2 text-sm hover:bg-indigo-50 rounded-lg transition-colors md:hidden"
+                          onClick={() => setShowProfileMenu(false)}
+                        >
+                          <span>📅</span>
+                          <span>Календарь</span>
+                        </Link>
+                        <Link 
                           href="/settings" 
-                          className="flex items-center gap-3 px-3 py-2 text-sm hover:bg-white/5 rounded-lg transition-colors md:hidden"
+                          className="flex items-center gap-3 px-3 py-2 text-sm hover:bg-indigo-50 rounded-lg transition-colors md:hidden"
                           onClick={() => setShowProfileMenu(false)}
                         >
                           <span>⚙️</span>
@@ -237,7 +248,7 @@ export function Header({
                         </Link>
                         <Link 
                           href="/agreements" 
-                          className="flex items-center gap-3 px-3 py-2 text-sm hover:bg-white/5 rounded-lg transition-colors md:hidden"
+                          className="flex items-center gap-3 px-3 py-2 text-sm hover:bg-indigo-50 rounded-lg transition-colors md:hidden"
                           onClick={() => setShowProfileMenu(false)}
                         >
                           <span>📜</span>

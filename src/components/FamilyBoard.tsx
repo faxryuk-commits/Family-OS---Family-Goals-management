@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Family, FamilyMember, Goal, User, Conflict, CheckIn, Agreement, Subtask, Comment, Notification, Reaction } from "@prisma/client";
+import { Family, FamilyMember, Goal, User, Conflict, CheckIn, Agreement, Subtask, Comment, Notification, Reaction, Event } from "@prisma/client";
 import { Header } from "./Header";
 import { GoalCard } from "./GoalCard";
 import { ConflictAlert } from "./ConflictAlert";
@@ -81,11 +81,18 @@ type FamilyWithRelations = Family & {
   agreements: Agreement[];
 };
 
+type UpcomingEvent = Event & {
+  creator: { id: string; name: string | null; image: string | null };
+  forUser: { id: string; name: string | null; image: string | null } | null;
+  goal: { id: string; title: string } | null;
+};
+
 type FamilyBoardProps = {
   family: FamilyWithRelations;
   currentUserId: string;
   notifications?: NotificationWithSender[];
   unreadNotificationsCount?: number;
+  upcomingEvents?: UpcomingEvent[];
 };
 
 // Форматирование даты
@@ -111,7 +118,7 @@ function getLevelColor(level: number): string {
   return "from-emerald-400 to-green-600";
 }
 
-export function FamilyBoard({ family, currentUserId, notifications = [], unreadNotificationsCount = 0 }: FamilyBoardProps) {
+export function FamilyBoard({ family, currentUserId, notifications = [], unreadNotificationsCount = 0, upcomingEvents = [] }: FamilyBoardProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false);
   const [selectedConflict, setSelectedConflict] = useState<(typeof family.conflicts)[0] | null>(null);
@@ -650,6 +657,45 @@ export function FamilyBoard({ family, currentUserId, notifications = [], unreadN
                       Нет активных целей
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Upcoming Events */}
+            {upcomingEvents.length > 0 && (
+              <div className="card p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold">📅 Скоро</h3>
+                  <Link href="/calendar" className="text-xs text-indigo-500 hover:underline">
+                    Все события →
+                  </Link>
+                </div>
+                <div className="space-y-2">
+                  {upcomingEvents.map(event => {
+                    const daysUntil = Math.ceil(
+                      (new Date(event.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+                    );
+                    return (
+                      <Link
+                        key={event.id}
+                        href="/calendar"
+                        className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--card-hover)] transition-colors"
+                      >
+                        <span className="text-lg">{event.emoji || "📅"}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{event.title}</p>
+                          <p className="text-xs text-[var(--muted)]">
+                            {daysUntil === 0 ? "Сегодня" : 
+                             daysUntil === 1 ? "Завтра" : 
+                             `Через ${daysUntil} дн.`}
+                          </p>
+                        </div>
+                        {event.forUser && (
+                          <span className="text-xs text-pink-500">👤</span>
+                        )}
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             )}

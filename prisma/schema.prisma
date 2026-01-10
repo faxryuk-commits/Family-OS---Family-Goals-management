@@ -88,6 +88,10 @@ model User {
   // Notifications
   notifications     Notification[]
   sentNotifications Notification[]   @relation("NotificationSender")
+  
+  // Calendar
+  createdEvents     Event[]          @relation("EventCreator")
+  eventsForMe       Event[]          @relation("EventForUser")
 }
 
 // ============================================
@@ -138,6 +142,7 @@ model Family {
   agreements Agreement[]
   checkIns   CheckIn[]
   invites    Invite[]
+  events     Event[]
 }
 
 model FamilyMember {
@@ -196,6 +201,9 @@ model Goal {
   checkInProgress CheckInProgress[]
   comments        Comment[]
   reactions       Reaction[] @relation("GoalReactions")
+  
+  // Calendar events linked to this goal
+  events          Event[]
 }
 
 // Подзадачи / Этапы цели
@@ -391,7 +399,7 @@ model Invite {
 
 model Notification {
   id        String   @id @default(cuid())
-  type      String   // GOAL_ASSIGNED, COMMENT, FAMILY_INVITE, GOAL_COMPLETED, CHECK_IN, ACHIEVEMENT
+  type      String   // GOAL_ASSIGNED, COMMENT, FAMILY_INVITE, GOAL_COMPLETED, CHECK_IN, ACHIEVEMENT, EVENT_REMINDER
   title     String
   message   String
   link      String?  // URL для перехода
@@ -409,4 +417,52 @@ model Notification {
   // Связанные сущности (опционально)
   goalId    String?
   familyId  String?
+  eventId   String?
+}
+
+// ============================================
+// CALENDAR (Семейный календарь)
+// ============================================
+
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  date        DateTime  // Дата события
+  endDate     DateTime? // Конечная дата (для многодневных событий)
+  allDay      Boolean   @default(true) // Событие на весь день
+  
+  // Тип события
+  type        String    @default("CUSTOM") // BIRTHDAY, ANNIVERSARY, HOLIDAY, REMINDER, GOAL_DEADLINE, MEETING, CUSTOM
+  
+  // Повторение события
+  recurring   String?   // NONE, DAILY, WEEKLY, MONTHLY, YEARLY
+  
+  // Напоминание (за сколько дней до события)
+  remindDays  Int       @default(1) // За сколько дней напомнить (0 = в день события)
+  reminded    Boolean   @default(false) // Было ли отправлено напоминание
+  
+  // Emoji для визуализации
+  emoji       String?   // 🎂, 💍, 🎉, 📅, etc.
+  
+  // Цвет события (для отображения в календаре)
+  color       String    @default("#6366f1") // Цвет в HEX
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Связи
+  creatorId   String
+  creator     User      @relation("EventCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  
+  familyId    String
+  family      Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  
+  // Связь с целью (опционально, для дедлайнов)
+  goalId      String?
+  goal        Goal?     @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  
+  // Для кого событие (опционально, например, день рождения члена семьи)
+  forUserId   String?
+  forUser     User?     @relation("EventForUser", fields: [forUserId], references: [id], onDelete: SetNull)
 }
