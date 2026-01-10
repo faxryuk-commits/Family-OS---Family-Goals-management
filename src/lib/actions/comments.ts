@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
+import { notifyComment } from "./notifications";
 
 // Создать комментарий
 export async function createComment(goalId: string, text: string) {
@@ -14,7 +15,7 @@ export async function createComment(goalId: string, text: string) {
   // Проверяем, что пользователь в той же семье, что и цель
   const goal = await db.goal.findUnique({
     where: { id: goalId },
-    select: { familyId: true },
+    select: { familyId: true, ownerId: true, title: true },
   });
 
   if (!goal) {
@@ -49,6 +50,19 @@ export async function createComment(goalId: string, text: string) {
       },
     },
   });
+
+  // 🔔 NOTIFICATION: Уведомить владельца цели о комментарии
+  if (goal.ownerId !== session.user.id) {
+    await notifyComment({
+      goalId,
+      goalTitle: goal.title,
+      goalOwnerId: goal.ownerId,
+      fromUserId: session.user.id,
+      fromUserName: comment.author.name || "Кто-то",
+      commentText: text,
+      familyId: goal.familyId,
+    });
+  }
 
   revalidatePath("/");
   return comment;

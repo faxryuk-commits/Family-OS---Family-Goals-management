@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { notifyFamilyJoined } from "./notifications";
 
 // Получить семью пользователя (с геймификацией)
 export async function getUserFamily(userId: string) {
@@ -182,6 +183,19 @@ export async function joinFamilyByInvite(code: string, userId: string) {
     return invite.family;
   }
 
+  // Получаем данные нового пользователя
+  const newUser = await db.user.findUnique({
+    where: { id: userId },
+    select: { name: true },
+  });
+
+  // Получаем всех членов семьи до добавления
+  const existingMembers = await db.familyMember.findMany({
+    where: { familyId: invite.familyId },
+    select: { userId: true },
+  });
+  const memberIds = existingMembers.map(m => m.userId);
+
   // Добавляем в семью и помечаем приглашение использованным
   await db.$transaction([
     db.familyMember.create({
@@ -199,6 +213,15 @@ export async function joinFamilyByInvite(code: string, userId: string) {
       },
     }),
   ]);
+
+  // 🔔 NOTIFICATION: Уведомить всех членов семьи о новом участнике
+  await notifyFamilyJoined({
+    familyId: invite.familyId,
+    familyName: invite.family.name,
+    newMemberName: newUser?.name || "Новый участник",
+    newMemberId: userId,
+    memberIds,
+  });
 
   revalidatePath("/");
   return invite.family;

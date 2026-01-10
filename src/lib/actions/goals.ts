@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { detectConflicts } from "./conflicts";
 import { auth } from "@/auth";
 import { recordGoalCompletion, addUserXp, checkAchievements } from "./gamification";
+import { notifyGoalAssigned, notifyGoalCompleted } from "./notifications";
 
 // Проверка что пользователь — владелец цели
 async function verifyGoalOwner(goalId: string): Promise<boolean> {
@@ -70,6 +71,18 @@ export async function createGoal(input: CreateGoalInput) {
   // 🎮 GAMIFICATION: XP за создание цели
   await addUserXp(input.ownerId, 10, "Новая цель создана");
   await checkAchievements(input.ownerId);
+
+  // 🔔 NOTIFICATION: Уведомить отмеченного пользователя
+  if (input.assignedToId && goal.owner) {
+    await notifyGoalAssigned({
+      goalId: goal.id,
+      goalTitle: goal.title,
+      assignedToId: input.assignedToId,
+      fromUserId: input.ownerId,
+      fromUserName: goal.owner.name || "Кто-то",
+      familyId: input.familyId,
+    });
+  }
 
   revalidatePath("/");
   return goal;

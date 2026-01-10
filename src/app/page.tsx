@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { FamilyBoard } from "@/components/FamilyBoard";
 import { getUserFamily } from "@/lib/actions/family";
+import { getNotifications, getUnreadCount } from "@/lib/actions/notifications";
 import { redirect } from "next/navigation";
 import { NoFamilyView } from "@/components/NoFamilyView";
 
@@ -22,5 +23,16 @@ export default async function Home() {
     return <NoFamilyView userId={session.user.id} userName={session.user.name || ""} />;
   }
 
-  return <FamilyBoard family={family} currentUserId={session.user.id} />;
+  // Получаем уведомления
+  const notifications = await getNotifications(10);
+  const unreadCount = await getUnreadCount();
+
+  return (
+    <FamilyBoard 
+      family={family} 
+      currentUserId={session.user.id}
+      notifications={notifications}
+      unreadNotificationsCount={unreadCount}
+    />
+  );
 }

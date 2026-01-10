@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { getLevelFromXp } from "@/lib/gamification-utils";
+import { NotificationBell } from "./NotificationBell";
+import { Notification, User } from "@prisma/client";
 
 type CurrentUser = {
   id: string;
@@ -14,6 +16,10 @@ type CurrentUser = {
   streak: number;
 };
 
+type NotificationWithSender = Notification & {
+  fromUser: { id: string; name: string | null; image: string | null } | null;
+};
+
 type HeaderProps = {
   familyName: string;
   northStar?: string | null;
@@ -22,6 +28,8 @@ type HeaderProps = {
   currentUser?: CurrentUser;
   familyLevel?: number;
   familyXp?: number;
+  notifications?: NotificationWithSender[];
+  unreadNotificationsCount?: number;
 };
 
 // Цвета уровней
@@ -40,6 +48,8 @@ export function Header({
   currentUser,
   familyLevel = 1,
   familyXp = 0,
+  notifications = [],
+  unreadNotificationsCount = 0,
 }: HeaderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(northStar || "");
@@ -89,6 +99,12 @@ export function Header({
 
           {/* Right: Actions + Profile */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Notifications */}
+            <NotificationBell
+              initialNotifications={notifications}
+              initialUnreadCount={unreadNotificationsCount}
+            />
+
             {/* Conflict Badge */}
             {conflictCount > 0 && (
               <div className="flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/30 rounded-lg animate-pulse-glow">

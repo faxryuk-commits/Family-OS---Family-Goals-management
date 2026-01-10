@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Family, FamilyMember, Goal, User, Conflict, CheckIn, Agreement, Subtask, Comment } from "@prisma/client";
+import { Family, FamilyMember, Goal, User, Conflict, CheckIn, Agreement, Subtask, Comment, Notification } from "@prisma/client";
 import { Header } from "./Header";
 import { GoalCard } from "./GoalCard";
 import { ConflictAlert } from "./ConflictAlert";
@@ -21,6 +21,10 @@ import { ResourceType } from "@/lib/types";
 import { EditGoalModal } from "./EditGoalModal";
 import { updateGoal, deleteGoal } from "@/lib/actions/goals";
 import Link from "next/link";
+
+type NotificationWithSender = Notification & {
+  fromUser: { id: string; name: string | null; image: string | null } | null;
+};
 
 type Author = {
   id: string;
@@ -69,6 +73,8 @@ type FamilyWithRelations = Family & {
 type FamilyBoardProps = {
   family: FamilyWithRelations;
   currentUserId: string;
+  notifications?: NotificationWithSender[];
+  unreadNotificationsCount?: number;
 };
 
 // Форматирование даты
@@ -94,7 +100,7 @@ function getLevelColor(level: number): string {
   return "from-emerald-400 to-green-600";
 }
 
-export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
+export function FamilyBoard({ family, currentUserId, notifications = [], unreadNotificationsCount = 0 }: FamilyBoardProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false);
   const [selectedConflict, setSelectedConflict] = useState<(typeof family.conflicts)[0] | null>(null);
@@ -258,6 +264,8 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
         currentUser={currentUser}
         familyLevel={family.level}
         familyXp={family.xp}
+        notifications={notifications}
+        unreadNotificationsCount={unreadNotificationsCount}
       />
 
       <div className="max-w-6xl mx-auto px-4 py-4 lg:py-6">
