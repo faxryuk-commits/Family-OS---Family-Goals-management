@@ -21,55 +21,60 @@ export async function toggleReaction({
   targetType: ReactionTarget;
   targetId: string;
 }) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    throw new Error("Необходима авторизация");
-  }
-
-  const userId = session.user.id;
-
-  // Определяем поля для запроса в зависимости от типа
-  const targetField = 
-    targetType === "goal" ? "goalId" :
-    targetType === "comment" ? "commentId" :
-    "checkInId";
-
-  // Ищем существующую реакцию
-  const existingReaction = await db.reaction.findFirst({
-    where: {
-      userId,
-      [targetField]: targetId,
-    },
-  });
-
-  if (existingReaction) {
-    if (existingReaction.emoji === emoji) {
-      // Та же реакция — удаляем
-      await db.reaction.delete({
-        where: { id: existingReaction.id },
-      });
-      revalidatePath("/");
-      return { action: "removed", emoji };
-    } else {
-      // Другая реакция — обновляем
-      await db.reaction.update({
-        where: { id: existingReaction.id },
-        data: { emoji },
-      });
-      revalidatePath("/");
-      return { action: "changed", emoji, previousEmoji: existingReaction.emoji };
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      throw new Error("Необходима авторизация");
     }
-  } else {
-    // Новая реакция — создаём
-    await db.reaction.create({
-      data: {
-        emoji,
+
+    const userId = session.user.id;
+
+    // Определяем поля для запроса в зависимости от типа
+    const targetField = 
+      targetType === "goal" ? "goalId" :
+      targetType === "comment" ? "commentId" :
+      "checkInId";
+
+    // Ищем существующую реакцию
+    const existingReaction = await db.reaction.findFirst({
+      where: {
         userId,
         [targetField]: targetId,
       },
     });
-    revalidatePath("/");
-    return { action: "added", emoji };
+
+    if (existingReaction) {
+      if (existingReaction.emoji === emoji) {
+        // Та же реакция — удаляем
+        await db.reaction.delete({
+          where: { id: existingReaction.id },
+        });
+        revalidatePath("/");
+        return { action: "removed", emoji };
+      } else {
+        // Другая реакция — обновляем
+        await db.reaction.update({
+          where: { id: existingReaction.id },
+          data: { emoji },
+        });
+        revalidatePath("/");
+        return { action: "changed", emoji, previousEmoji: existingReaction.emoji };
+      }
+    } else {
+      // Новая реакция — создаём
+      await db.reaction.create({
+        data: {
+          emoji,
+          userId,
+          [targetField]: targetId,
+        },
+      });
+      revalidatePath("/");
+      return { action: "added", emoji };
+    }
+  } catch (error) {
+    console.error("Error toggling reaction:", error);
+    throw new Error("Не удалось добавить реакцию. Попробуйте позже.");
   }
 }
 

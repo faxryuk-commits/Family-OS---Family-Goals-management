@@ -86,8 +86,14 @@ export function Reactions({
         setMyReaction(oldMyReaction);
         setLocalReactions(reactions);
         console.error("Ошибка при добавлении реакции:", error);
+        // Можно показать toast уведомление здесь
       }
     });
+  };
+
+  // Обработчик клика для предотвращения всплытия
+  const handleContainerClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
   };
 
   // Считаем общее количество реакций
@@ -103,12 +109,15 @@ export function Reactions({
 
   if (compact) {
     return (
-      <div className="flex items-center gap-1 relative">
+      <div className="flex items-center gap-1 relative" onClick={handleContainerClick}>
         {/* Existing reactions */}
         {sortedEmojis.map(emoji => (
           <button
             key={emoji}
-            onClick={() => handleReaction(emoji as ReactionEmoji)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleReaction(emoji as ReactionEmoji);
+            }}
             disabled={isPending}
             className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm transition-all ${
               myReaction === emoji
@@ -125,7 +134,10 @@ export function Reactions({
         {/* Add reaction button */}
         <div className="relative">
           <button
-            onClick={() => setShowPicker(!showPicker)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowPicker(!showPicker);
+            }}
             className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-colors"
             title="Добавить реакцию"
           >
@@ -138,7 +150,10 @@ export function Reactions({
               {REACTION_EMOJIS.map(emoji => (
                 <button
                   key={emoji}
-                  onClick={() => handleReaction(emoji)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleReaction(emoji);
+                  }}
                   disabled={isPending}
                   className={`w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-lg transition-all hover:scale-110 ${
                     myReaction === emoji ? "bg-blue-100" : ""
