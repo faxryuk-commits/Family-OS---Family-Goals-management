@@ -56,7 +56,7 @@ export function Header({
   const xpProgress = (levelInfo.currentXp / levelInfo.nextLevelXp) * 100;
 
   return (
-    <header className="border-b border-[var(--border)] bg-[var(--card)]/80 backdrop-blur-xl sticky top-0 z-50">
+    <header className="border-b border-[var(--border)] bg-white/80 backdrop-blur-xl sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
         <div className="flex items-center justify-between gap-4">
           {/* Logo & Family */}
@@ -65,10 +65,10 @@ export function Header({
               F
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-lg font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">{familyName}</h1>
+              <h1 className="text-lg font-bold text-[var(--foreground)]">{familyName}</h1>
               <div className="flex items-center gap-2 text-xs text-[var(--muted)]">
                 <span>Lv.{familyLevel}</span>
-                <div className="w-16 h-1 bg-[var(--background)] rounded-full overflow-hidden">
+                <div className="w-16 h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
                   <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500" style={{ width: `${(familyXp % 100)}%` }} />
                 </div>
               </div>
@@ -78,12 +78,12 @@ export function Header({
           {/* Center: Mission (collapsed on mobile) */}
           {northStar && !isEditing && (
             <div 
-              className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-xl cursor-pointer group flex-1 max-w-md mx-4"
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl cursor-pointer group flex-1 max-w-md mx-4 hover:border-indigo-300 transition-colors"
               onClick={() => setIsEditing(true)}
             >
               <span>🌟</span>
-              <span className="text-sm truncate">{northStar}</span>
-              <span className="opacity-0 group-hover:opacity-100 transition-opacity">✏️</span>
+              <span className="text-sm truncate text-[var(--foreground)]">{northStar}</span>
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity text-indigo-500">✏️</span>
             </div>
           )}
 
@@ -151,9 +151,9 @@ export function Header({
                 {showProfileMenu && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-                    <div className="absolute right-0 top-full mt-2 w-64 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-xl z-50 overflow-hidden animate-fade-in">
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-[var(--border)] rounded-xl shadow-lg z-50 overflow-hidden animate-fade-in">
                       {/* Profile Header */}
-                      <div className="p-4 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border-b border-[var(--border)]">
+                      <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-[var(--border)]">
                         <div className="flex items-center gap-3">
                           <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getLevelColor(currentUser.level)} flex items-center justify-center text-xl font-bold`}>
                             {(currentUser.name || "?").charAt(0).toUpperCase()}

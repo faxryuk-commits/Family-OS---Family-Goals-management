@@ -229,7 +229,7 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)]">
+    <div className="min-h-screen min-h-[100dvh] bg-[var(--background)] pb-20 lg:pb-6">
       {needsOnboarding && <Onboarding onComplete={completeOnboarding} familyName={family.name} />}
 
       <Header
@@ -330,8 +330,8 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
                   onClick={() => setActiveTab(tab.id as typeof activeTab)}
                   className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
                     activeTab === tab.id
-                      ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg"
-                      : "text-[var(--muted)] hover:text-white hover:bg-white/5"
+                      ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md"
+                      : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)]"
                   }`}
                 >
                   <span className="mr-1">{tab.icon}</span>
@@ -363,10 +363,10 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
                           <div className="font-medium text-sm">{item.user.name}</div>
                           <div className="text-xs text-[var(--muted)]">{formatRelativeTime(item.date)}</div>
                         </div>
-                        <div className={`px-2 py-1 rounded-lg text-xs ${
-                          item.type === "checkin" ? "bg-blue-500/20 text-blue-400" :
-                          item.type === "goal_completed" ? "bg-green-500/20 text-green-400" :
-                          "bg-purple-500/20 text-purple-400"
+                        <div className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                          item.type === "checkin" ? "bg-blue-100 text-blue-600" :
+                          item.type === "goal_completed" ? "bg-green-100 text-green-600" :
+                          "bg-purple-100 text-purple-600"
                         }`}>
                           {item.type === "checkin" ? "📋 Check-in" :
                            item.type === "goal_completed" ? "🏆 Выполнено" :
@@ -378,18 +378,18 @@ export function FamilyBoard({ family, currentUserId }: FamilyBoardProps) {
                       {item.type === "checkin" && (
                         <div className="space-y-2">
                           {item.data.wins && (
-                            <div className="p-3 bg-green-500/10 rounded-lg">
-                              <div className="text-xs text-green-400 mb-1">🏆 Победы</div>
-                              <div className="text-sm">{item.data.wins}</div>
+                            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                              <div className="text-xs text-green-600 font-medium mb-1">🏆 Победы</div>
+                              <div className="text-sm text-green-800">{item.data.wins}</div>
                             </div>
                           )}
                           {item.data.notes && (
                             <div className="text-sm text-[var(--muted)]">{item.data.notes}</div>
                           )}
                           {item.data.blockers && (
-                            <div className="p-3 bg-red-500/10 rounded-lg">
-                              <div className="text-xs text-red-400 mb-1">🚧 Нужна помощь</div>
-                              <div className="text-sm">{item.data.blockers}</div>
+                            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                              <div className="text-xs text-red-600 font-medium mb-1">🚧 Нужна помощь</div>
+                              <div className="text-sm text-red-800">{item.data.blockers}</div>
                             </div>
                           )}
                         </div>
